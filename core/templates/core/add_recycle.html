@@ -1,0 +1,693 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Recycle Record{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'core:manage_recycle' %}">Recycle Management</a></li>
+                            <li class="breadcrumb-item active">Add Recycle Record</li>
+                        </ol>
+                    </nav>
+                    <h1>
+                        <i class="bi bi-recycle me-2 text-success"></i>
+                        Add Recycle Record
+                    </h1>
+                    <p class="text-muted">Record books that are being recycled or disposed of</p>
+                </div>
+                <div>
+                    <a href="{% url 'core:manage_recycle' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Recycle Management
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Recycle Record Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Alert Messages -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Form Errors -->
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <form method="post" id="recycleForm">
+                        {% csrf_token %}
+                        
+                        <!-- Book Selection -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-4">
+                                    <label for="{{ form.book.id_for_label }}" class="form-label">
+                                        <strong>Book to Recycle *</strong>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-book"></i>
+                                        </span>
+                                        {{ form.book }}
+                                    </div>
+                                    {% if form.book.errors %}
+                                        <div class="text-danger small mt-1">{{ form.book.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">Select the book that is being recycled</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Book Search Helper -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-4">
+                                    <label class="form-label">Book Search Helper</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-search"></i>
+                                        </span>
+                                        <input type="text" class="form-control" id="bookSearch" 
+                                               placeholder="Type to search books by title, author, or ISBN...">
+                                        <button type="button" class="btn btn-outline-secondary" onclick="clearSearch()">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                    </div>
+                                    <div id="searchResults" class="mt-2"></div>
+                                </div>
+                            </div>
+                        </div>                        <!-- Book Information -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.book_id_isbn.id_for_label }}" class="form-label">
+                                        <strong>Book ISBN</strong>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-upc"></i>
+                                        </span>
+                                        {{ form.book_id_isbn }}
+                                    </div>
+                                    {% if form.book_id_isbn.errors %}
+                                        <div class="text-danger small mt-1">{{ form.book_id_isbn.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">Alternative to book selection above</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.title.id_for_label }}" class="form-label">
+                                        <strong>Book Title</strong>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-fonts"></i>
+                                        </span>
+                                        {{ form.title }}
+                                    </div>
+                                    {% if form.title.errors %}
+                                        <div class="text-danger small mt-1">{{ form.title.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">Alternative to book selection above</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quantity and Date -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.quantity.id_for_label }}" class="form-label">
+                                        <strong>Quantity *</strong>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-hash"></i>
+                                        </span>
+                                        {{ form.quantity }}
+                                    </div>
+                                    {% if form.quantity.errors %}
+                                        <div class="text-danger small mt-1">{{ form.quantity.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">Number of copies to recycle</div>
+                                </div>                            </div>
+                        </div>
+
+                        <!-- Note: Date will be automatically set when the record is saved -->
+                        </div>
+
+                        <!-- Recycled By and Status -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.recycled_by.id_for_label }}" class="form-label">
+                                        <strong>Recycled By *</strong>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-person"></i>
+                                        </span>
+                                        {{ form.recycled_by }}
+                                    </div>
+                                    {% if form.recycled_by.errors %}
+                                        <div class="text-danger small mt-1">{{ form.recycled_by.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.status.id_for_label }}" class="form-label">
+                                        <strong>Status *</strong>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-flag"></i>
+                                        </span>
+                                        {{ form.status }}
+                                    </div>
+                                    {% if form.status.errors %}
+                                        <div class="text-danger small mt-1">{{ form.status.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">Current recycling status</div>
+                                </div>
+                            </div>
+                        </div>                        <!-- Reason and Description -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-4">
+                                    <label for="{{ form.reason.id_for_label }}" class="form-label">
+                                        <strong>Reason for Recycling *</strong>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-exclamation-triangle"></i>
+                                        </span>
+                                        {{ form.reason }}
+                                    </div>
+                                    {% if form.reason.errors %}
+                                        <div class="text-danger small mt-1">{{ form.reason.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">Select the primary reason for recycling this book</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-4">
+                                    <label for="{{ form.description.id_for_label }}" class="form-label">
+                                        <strong>Description/Notes</strong>
+                                    </label>
+                                    {{ form.description }}
+                                    {% if form.description.errors %}
+                                        <div class="text-danger small mt-1">{{ form.description.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">Additional details about the recycling reason</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Disposal Information (Optional) -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.disposal_method.id_for_label }}" class="form-label">
+                                        <strong>Disposal Method</strong>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-arrow-right-circle"></i>
+                                        </span>
+                                        {{ form.disposal_method }}
+                                    </div>
+                                    {% if form.disposal_method.errors %}
+                                        <div class="text-danger small mt-1">{{ form.disposal_method.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">How the book will be disposed (optional)</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.disposal_date.id_for_label }}" class="form-label">
+                                        <strong>Disposal Date</strong>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-calendar-check"></i>
+                                        </span>
+                                        {{ form.disposal_date }}
+                                    </div>
+                                    {% if form.disposal_date.errors %}
+                                        <div class="text-danger small mt-1">{{ form.disposal_date.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">When disposal will occur (optional)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Disposal Notes -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-4">
+                                    <label for="{{ form.disposal_notes.id_for_label }}" class="form-label">
+                                        <strong>Disposal Notes</strong>
+                                    </label>
+                                    {{ form.disposal_notes }}
+                                    {% if form.disposal_notes.errors %}
+                                        <div class="text-danger small mt-1">{{ form.disposal_notes.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">Additional information about the disposal process (optional)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Environmental Impact Info -->
+                        <div class="alert alert-info">
+                            <div class="row">
+                                <div class="col-md-1 text-center">
+                                    <i class="bi bi-leaf fs-3 text-success"></i>
+                                </div>
+                                <div class="col-md-11">
+                                    <h6 class="alert-heading">Environmental Impact</h6>
+                                    <p class="mb-2">By recycling books, we contribute to:</p>
+                                    <ul class="mb-0 small">
+                                        <li>Reducing landfill waste</li>
+                                        <li>Conserving natural resources</li>
+                                        <li>Supporting sustainable practices</li>
+                                        <li>Creating new paper products</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="text-muted small">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Fields marked with * are required
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <a href="{% url 'core:manage_recycle' %}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-x-circle me-2"></i>Cancel
+                                        </a>
+                                        <button type="button" class="btn btn-outline-primary" onclick="previewRecord()">
+                                            <i class="bi bi-eye me-2"></i>Preview
+                                        </button>
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="bi bi-plus-circle me-2"></i>Add Recycle Record
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Sidebar -->
+        <div class="col-lg-4">
+            <!-- Recycling Guidelines -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Recycling Guidelines
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="small">
+                        <div class="mb-3">
+                            <strong class="text-success">Suitable for Recycling:</strong>
+                            <ul class="mt-1 mb-0">
+                                <li>Damaged beyond repair</li>
+                                <li>Outdated editions</li>
+                                <li>Water damaged books</li>
+                                <li>Books with missing pages</li>
+                                <li>Worn-out textbooks</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong class="text-warning">Consider Before Recycling:</strong>
+                            <ul class="mt-1 mb-0">
+                                <li>Historical value</li>
+                                <li>Donation possibilities</li>
+                                <li>Rare or collectible items</li>
+                                <li>Local library exchange</li>
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <strong class="text-info">Process Steps:</strong>
+                            <ol class="mt-1 mb-0">
+                                <li>Remove library property markings</li>
+                                <li>Separate by paper type</li>
+                                <li>Remove non-paper elements</li>
+                                <li>Sort by recycling facility requirements</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="bi bi-graph-up me-2"></i>
+                        Recycling Statistics
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <div class="h5 text-success mb-0">148</div>
+                                <div class="small text-muted">Books Recycled</div>
+                                <div class="small text-muted">This Year</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="h5 text-info mb-0">2.3T</div>
+                            <div class="small text-muted">Paper Saved</div>
+                            <div class="small text-muted">Estimated</div>
+                        </div>
+                    </div>
+                    <div class="mt-3 small text-center">
+                        <div class="text-success">
+                            <i class="bi bi-tree me-1"></i>
+                            ~12 trees saved through recycling
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Recent Recycling
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="small">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Damaged Physics Textbook</span>
+                            <span class="text-muted">2 days ago</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Outdated Computer Manual</span>
+                            <span class="text-muted">1 week ago</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Water Damaged Novel</span>
+                            <span class="text-muted">2 weeks ago</span>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{% url 'core:manage_recycle' %}" class="btn btn-outline-secondary btn-sm">
+                                View All Records
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-eye me-2"></i>
+                    Preview Recycle Record
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="previewContent">
+                <!-- Preview content will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-pencil me-2"></i>Edit
+                </button>
+                <button type="button" class="btn btn-success" onclick="submitForm()">
+                    <i class="bi bi-check-circle me-2"></i>Confirm & Add
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default recycled_by to current user if available
+    var recycledByField = document.querySelector('select[name="recycled_by"]');
+    if (recycledByField && !recycledByField.value) {
+        // Will be set via form initial values or user selection
+    }
+
+    // Book search functionality
+    var searchInput = document.getElementById('bookSearch');
+    var searchResults = document.getElementById('searchResults');
+    var bookSelect = document.querySelector('select[name="book"]');
+    
+    searchInput.addEventListener('input', function() {
+        var query = this.value.trim();
+        
+        if (query.length >= 2) {
+            fetch(`{% url 'core:search_books_ajax' %}?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    displaySearchResults(data.books);
+                })
+                .catch(error => {
+                    console.error('Search error:', error);
+                });
+        } else {
+            searchResults.innerHTML = '';
+        }
+    });
+    
+    function displaySearchResults(books) {
+        if (books.length === 0) {
+            searchResults.innerHTML = '<div class="alert alert-info small">No books found</div>';
+            return;
+        }
+        
+        var html = '<div class="list-group">';
+        books.forEach(function(book) {
+            var statusBadge = book.available ? 
+                '<span class="badge bg-success">Available</span>' : 
+                '<span class="badge bg-warning">Not Available</span>';
+                
+            html += `
+                <a href="#" class="list-group-item list-group-item-action" onclick="selectBook(${book.id}, '${book.title}')">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">${book.title}</h6>
+                        ${statusBadge}
+                    </div>
+                    <p class="mb-1">Author: ${book.author}</p>
+                    <small>ISBN: ${book.isbn} | Category: ${book.category}</small>
+                </a>
+            `;
+        });
+        html += '</div>';
+        
+        searchResults.innerHTML = html;
+    }
+});
+
+function selectBook(bookId, title) {
+    var bookSelect = document.querySelector('select[name="book"]');
+    var searchInput = document.getElementById('bookSearch');
+    var searchResults = document.getElementById('searchResults');
+    
+    // Set the selected book
+    bookSelect.value = bookId;
+    searchInput.value = title;
+    searchResults.innerHTML = '';
+    
+    // Trigger change event
+    var event = new Event('change');
+    bookSelect.dispatchEvent(event);
+}
+
+function clearSearch() {
+    document.getElementById('bookSearch').value = '';
+    document.getElementById('searchResults').innerHTML = '';
+}
+
+function previewRecord() {
+    var form = document.getElementById('recycleForm');
+    var formData = new FormData(form);
+    
+    // Get selected book title
+    var bookSelect = document.querySelector('select[name="book"]');
+    var selectedBook = bookSelect && bookSelect.selectedIndex > 0 ? 
+        bookSelect.options[bookSelect.selectedIndex].text : 
+        (formData.get('title') || 'Manual Entry');
+    
+    // Get selected user for recycled_by
+    var recycledBySelect = document.querySelector('select[name="recycled_by"]');
+    var selectedUser = recycledBySelect && recycledBySelect.selectedIndex > 0 ? 
+        recycledBySelect.options[recycledBySelect.selectedIndex].text : 
+        'Not specified';
+
+    // Get selected status
+    var statusSelect = document.querySelector('select[name="status"]');
+    var selectedStatus = statusSelect && statusSelect.selectedIndex > 0 ? 
+        statusSelect.options[statusSelect.selectedIndex].text : 
+        'Not specified';
+
+    // Get selected reason
+    var reasonSelect = document.querySelector('select[name="reason"]');
+    var selectedReason = reasonSelect && reasonSelect.selectedIndex > 0 ? 
+        reasonSelect.options[reasonSelect.selectedIndex].text : 
+        'Not specified';
+    
+    var previewHtml = `
+        <div class="row mb-3">
+            <div class="col-6">
+                <strong>Book:</strong><br>
+                <span class="text-muted">${selectedBook}</span>
+                ${formData.get('book_id_isbn') ? `<br><small>ISBN: ${formData.get('book_id_isbn')}</small>` : ''}
+            </div>            <div class="col-6">
+                <strong>Quantity:</strong><br>
+                <span class="text-muted">${formData.get('quantity') || 'Not specified'}</span>
+            </div>
+            <div class="col-6">
+                <strong>Status:</strong><br>
+                <span class="text-muted">${selectedStatus}</span>
+            </div>
+        </div>
+        <hr>
+        <div class="row mb-3">
+            <div class="col-6">
+                <strong>Recycled By:</strong><br>
+                <span class="text-muted">${selectedUser}</span>
+            </div>
+            <div class="col-6">
+                <strong>Reason:</strong><br>
+                <span class="text-muted">${selectedReason}</span>
+            </div>
+        </div>
+        ${formData.get('description') ? `
+        <hr>
+        <div class="mb-3">
+            <strong>Description:</strong><br>
+            <span class="text-muted">${formData.get('description')}</span>
+        </div>
+        ` : ''}
+        ${formData.get('disposal_method') || formData.get('disposal_date') ? `
+        <hr>
+        <div class="row mb-3">
+            <div class="col-6">
+                <strong>Disposal Method:</strong><br>
+                <span class="text-muted">${formData.get('disposal_method') || 'Not specified'}</span>
+            </div>
+            <div class="col-6">
+                <strong>Disposal Date:</strong><br>
+                <span class="text-muted">${formData.get('disposal_date') || 'Not specified'}</span>
+            </div>
+        </div>
+        ` : ''}
+        ${formData.get('disposal_notes') ? `
+        <hr>
+        <div class="mb-3">
+            <strong>Disposal Notes:</strong><br>
+            <span class="text-muted">${formData.get('disposal_notes')}</span>
+        </div>
+        ` : ''}
+    `;
+    
+    document.getElementById('previewContent').innerHTML = previewHtml;
+    
+    var modal = new bootstrap.Modal(document.getElementById('previewModal'));
+    modal.show();
+}
+
+function submitForm() {
+    document.getElementById('recycleForm').submit();
+}
+
+// Form validation
+document.getElementById('recycleForm').addEventListener('submit', function(e) {
+    var book = document.querySelector('select[name="book"]').value;
+    var bookIsbn = document.querySelector('input[name="book_id_isbn"]').value;
+    var title = document.querySelector('input[name="title"]').value;
+    var reason = document.querySelector('select[name="reason"]').value;
+    var quantity = document.querySelector('input[name="quantity"]').value;
+    var recycledBy = document.querySelector('select[name="recycled_by"]').value;
+    var status = document.querySelector('select[name="status"]').value;
+    
+    // Check if at least one book identification method is provided
+    if (!book && !bookIsbn && !title) {
+        e.preventDefault();
+        alert('Please either select a book from the dropdown, enter an ISBN, or enter a book title.');
+        return false;
+    }
+    
+    if (!reason) {
+        e.preventDefault();
+        alert('Please select a reason for recycling.');
+        return false;
+    }
+
+    if (!quantity || quantity < 1) {
+        e.preventDefault();
+        alert('Please enter a valid quantity (at least 1).');
+        return false;
+    }
+
+    if (!recycledBy) {
+        e.preventDefault();
+        alert('Please select who is performing the recycling.');
+        return false;
+    }
+
+    if (!status) {
+        e.preventDefault();
+        alert('Please select the recycling status.');
+        return false;
+    }
+    
+    return confirm('Are you sure you want to add this recycle record? This action cannot be undone.');
+});
+</script>
+{% endblock %}

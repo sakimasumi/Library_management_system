@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Update Setting - {{ setting.setting_key }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'admin_custom:admin_dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'admin_custom:admin_settings' %}">Settings</a></li>
+                    <li class="breadcrumb-item active">{{ setting.setting_key }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-gear me-2"></i>Update Setting</h2>
+            <p class="text-muted">Modify system configuration setting</p>
+        </div>
+    </div>
+
+    <!-- Update Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-pencil-square me-2"></i>Edit Setting: {{ setting.setting_key }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="updateSettingForm">
+                        {% csrf_token %}
+                        
+                        <!-- Setting Information -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <h6 class="alert-heading">
+                                        <i class="bi bi-info-circle me-2"></i>Setting Information
+                                    </h6>
+                                    <p class="mb-2"><strong>Key:</strong> <code>{{ setting.setting_key }}</code></p>
+                                    {% if setting.description %}
+                                    <p class="mb-2"><strong>Description:</strong> {{ setting.description }}</p>
+                                    {% endif %}
+                                    <p class="mb-0"><strong>Current Value:</strong> <code>{{ setting.setting_value }}</code></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Setting Value Input -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label for="setting_value" class="form-label">
+                                    <i class="bi bi-pencil me-1"></i>Setting Value <span class="text-danger">*</span>
+                                </label>
+                                
+                                {% if setting.setting_key == 'maintenance_mode' %}
+                                    <select class="form-select" id="setting_value" name="setting_value" required>
+                                        <option value="true" {% if setting.setting_value == 'true' %}selected{% endif %}>Enable Maintenance Mode</option>
+                                        <option value="false" {% if setting.setting_value == 'false' %}selected{% endif %}>Disable Maintenance Mode</option>
+                                    </select>
+                                {% elif setting.setting_key == 'max_books_per_user' or setting.setting_key == 'loan_duration_days' %}
+                                    <input type="number" class="form-control" id="setting_value" name="setting_value" 
+                                           value="{{ setting.setting_value }}" min="1" max="365" required>
+                                {% elif setting.setting_key == 'fine_per_day' %}
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="setting_value" name="setting_value" 
+                                               value="{{ setting.setting_value }}" step="0.01" min="0" required>
+                                    </div>
+                                {% elif 'email' in setting.setting_key or 'notification' in setting.setting_key %}
+                                    <select class="form-select" id="setting_value" name="setting_value" required>
+                                        <option value="enabled" {% if setting.setting_value == 'enabled' %}selected{% endif %}>Enabled</option>
+                                        <option value="disabled" {% if setting.setting_value == 'disabled' %}selected{% endif %}>Disabled</option>
+                                    </select>
+                                {% else %}
+                                    <textarea class="form-control" id="setting_value" name="setting_value" 
+                                              rows="3" required>{{ setting.setting_value }}</textarea>
+                                {% endif %}
+                                
+                                <div class="form-text">
+                                    {% if setting.setting_key == 'maintenance_mode' %}
+                                        When enabled, the system will display a maintenance message to users.
+                                    {% elif setting.setting_key == 'max_books_per_user' %}
+                                        Maximum number of books a user can borrow simultaneously.
+                                    {% elif setting.setting_key == 'loan_duration_days' %}
+                                        Default number of days for book loans.
+                                    {% elif setting.setting_key == 'fine_per_day' %}
+                                        Daily fine amount for overdue books.
+                                    {% else %}
+                                        Enter the new value for this setting.
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Warning Message -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    <strong>Warning:</strong> Changing system settings may affect the behavior of the application. 
+                                    Please ensure you understand the implications before saving changes.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Preview Section -->
+                        <div class="row mb-4" id="previewSection" style="display: none;">
+                            <div class="col-12">
+                                <div class="alert alert-light border">
+                                    <h6 class="alert-heading">
+                                        <i class="bi bi-eye me-2"></i>Change Preview
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <strong>Current Value:</strong><br>
+                                            <code id="currentValue">{{ setting.setting_value }}</code>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>New Value:</strong><br>
+                                            <code id="newValue"></code>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="row">
+                            <div class="col-12 d-flex justify-content-between">
+                                <a href="{% url 'admin_custom:admin_settings' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left me-2"></i>Back to Settings
+                                </a>
+                                <div>
+                                    <button type="button" class="btn btn-outline-warning me-2" onclick="resetForm()">
+                                        <i class="bi bi-arrow-clockwise me-2"></i>Reset
+                                    </button>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="bi bi-check-circle me-2"></i>Update Setting
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const settingInput = document.getElementById('setting_value');
+    const previewSection = document.getElementById('previewSection');
+    const newValueSpan = document.getElementById('newValue');
+    const originalValue = '{{ setting.setting_value|escapejs }}';
+    const settingKey = '{{ setting.setting_key|escapejs }}';
+    
+    // Show preview when value changes
+    settingInput.addEventListener('input', function() {
+        const newValue = this.value;
+        if (newValue !== originalValue) {
+            newValueSpan.textContent = newValue;
+            previewSection.style.display = 'block';
+        } else {
+            previewSection.style.display = 'none';
+        }
+    });
+    
+    // Form submission confirmation
+    document.getElementById('updateSettingForm').addEventListener('submit', function(e) {
+        const newValue = settingInput.value;
+        if (newValue !== originalValue) {
+            const confirmMessage = 'Are you sure you want to change "' + settingKey + '" from "' + originalValue + '" to "' + newValue + '"?';
+            if (!confirm(confirmMessage)) {
+                e.preventDefault();
+            }
+        }
+    });
+});
+
+function resetForm() {
+    document.getElementById('setting_value').value = '{{ setting.setting_value|escapejs }}';
+    document.getElementById('previewSection').style.display = 'none';
+}
+</script>
+{% endblock %}

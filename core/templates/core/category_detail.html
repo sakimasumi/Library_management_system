@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ category.name }} - Category Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    {% if category.icon %}
+                        <i class="bi {{ category.icon }} me-2 text-primary"></i>
+                    {% else %}
+                        <i class="bi bi-bookmark me-2 text-primary"></i>
+                    {% endif %}
+                    {{ category.name }}
+                </h1>
+                <div>
+                    <a href="{% url 'core:manage_categories' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Categories
+                    </a>
+                    <a href="{% url 'core:update_category' category.id %}" class="btn btn-warning">
+                        <i class="bi bi-pencil me-2"></i>Edit Category
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Information -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% if category.icon %}
+                        <i class="bi {{ category.icon }} display-1 text-primary mb-3"></i>
+                    {% else %}
+                        <i class="bi bi-bookmark display-1 text-secondary mb-3"></i>
+                    {% endif %}
+                    <h3>{{ category.name }}</h3>
+                    {% if category.description %}
+                        <p class="text-muted">{{ category.description }}</p>
+                    {% endif %}
+                    <h4 class="text-primary">{{ books.count }} Books</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <!-- Books in Category -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Books in {{ category.name }}</h5>
+                </div>
+                <div class="card-body">
+                    {% if books %}
+                        <div class="row g-3">
+                            {% for book in books %}
+                            <div class="col-lg-6">
+                                <div class="card">
+                                    <div class="row g-0">
+                                        <div class="col-4">
+                                            {% if book.image %}
+                                                <img src="{{ book.image.url }}" class="img-fluid rounded-start h-100" 
+                                                     style="object-fit: cover;">
+                                            {% else %}
+                                                <div class="bg-light h-100 d-flex align-items-center justify-content-center">
+                                                    <i class="bi bi-book text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-8">
+                                            <div class="card-body p-2">
+                                                <h6 class="card-title mb-1">{{ book.title_of_book|truncatechars:30 }}</h6>
+                                                <small class="text-muted">by {{ book.author.name }}</small><br>
+                                                {% if book.publication_date %}
+                                                    <small class="text-muted">{{ book.publication_date.year }}</small><br>
+                                                {% endif %}
+                                                {% if book.is_available %}
+                                                    <span class="badge bg-success">Available</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">Borrowed</span>
+                                                {% endif %}
+                                                <br>
+                                                <a href="{% url 'core:book_detail' book.book_id %}" 
+                                                   class="btn btn-primary btn-sm mt-1">View Details</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No books found in this category.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

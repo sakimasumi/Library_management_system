@@ -1,0 +1,529 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add New Book{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-plus-circle me-2 text-primary"></i>
+                    Add New Book
+                </h1>
+                <div>
+                    <a href="{% url 'core:book_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Books
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Book Form -->
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Book Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="addBookForm">
+                        {% csrf_token %}
+                        
+                        <!-- Basic Information -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_title" class="form-label">Title *</label>
+                                    <input type="text" class="form-control" id="id_title" name="title" required 
+                                           placeholder="Enter book title" maxlength="300">
+                                    {% if form.title.errors %}
+                                        <div class="text-danger small">{{ form.title.errors.0 }}</div>
+                                    {% endif %}
+                                    <div class="invalid-feedback" id="title-error"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_isbn" class="form-label">ISBN *</label>
+                                    <input type="text" class="form-control" id="id_isbn" name="isbn" required 
+                                        placeholder="Enter ISBN (e.g., 978-3-16-148410-0)" maxlength="20">
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        ISBN-10 or ISBN-13 format. Maximum 20 characters.
+                                    </div>
+                                    {% if form.isbn.errors %}
+                                        <div class="text-danger small">{{ form.isbn.errors.0 }}</div>
+                                    {% endif %}
+                                    <div class="invalid-feedback" id="isbn-error"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_author" class="form-label">Author *</label>
+                                    <select class="form-select" id="id_author" name="author" required>
+                                        <option value="">Select an author</option>
+                                        {% for author in authors %}
+                                            <option value="{{ author.id }}">{{ author.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="form-text">
+                                        <a href="{% url 'core:manage_authors' %}" target="_blank" class="text-decoration-none">
+                                            <i class="bi bi-plus-circle"></i> Add new author
+                                        </a>
+                                    </div>
+                                    {% if form.author.errors %}
+                                        <div class="text-danger small">{{ form.author.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_category" class="form-label">Category *</label>
+                                    <select class="form-select" id="id_category" name="category" required>
+                                        <option value="">Select a category</option>
+                                        {% for category in categories %}
+                                            <option value="{{ category.id }}">{{ category.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="form-text">
+                                        <a href="{% url 'core:manage_categories' %}" target="_blank" class="text-decoration-none">
+                                            <i class="bi bi-plus-circle"></i> Add new category
+                                        </a>
+                                    </div>
+                                    {% if form.category.errors %}
+                                        <div class="text-danger small">{{ form.category.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_publisher" class="form-label">Publisher *</label>
+                                    <select class="form-select" id="id_publisher" name="publisher" required>
+                                        <option value="">Select a publisher</option>
+                                        {% for publisher in publishers %}
+                                            <option value="{{ publisher.id }}">{{ publisher.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="form-text">
+                                        <a href="{% url 'core:manage_publishers' %}" target="_blank" class="text-decoration-none">
+                                            <i class="bi bi-plus-circle"></i> Add new publisher
+                                        </a>
+                                    </div>
+                                    {% if form.publisher.errors %}
+                                        <div class="text-danger small">{{ form.publisher.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_publication_date" class="form-label">Publication Date</label>
+                                    <input type="date" class="form-control" id="id_publication_date" name="publication_date">
+                                    {% if form.publication_date.errors %}
+                                        <div class="text-danger small">{{ form.publication_date.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_pages" class="form-label">Pages</label>
+                                    <input type="number" class="form-control" id="id_pages" name="pages" 
+                                           placeholder="Number of pages" min="1" max="10000">
+                                    {% if form.pages.errors %}
+                                        <div class="text-danger small">{{ form.pages.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_language" class="form-label">Language</label>
+                                    <input type="text" class="form-control" id="id_language" name="language" 
+                                           placeholder="e.g., English" value="English" maxlength="50">
+                                    {% if form.language.errors %}
+                                        <div class="text-danger small">{{ form.language.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="id_description" class="form-label">Description</label>
+                            <textarea class="form-control" id="id_description" name="description" rows="3" 
+                                      placeholder="Enter book description..."></textarea>
+                            {% if form.description.errors %}
+                                <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Book Cover -->
+                        <div class="mb-4">
+                            <label for="id_cover_image" class="form-label">
+                                <i class="bi bi-image me-2"></i>Book Cover Image
+                            </label>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <input type="file" class="form-control" id="id_cover_image" name="cover_image" 
+                                           accept="image/*">
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Upload book cover image (optional). Supported formats: JPG, PNG, WebP. Max size: 5MB
+                                    </div>
+                                    {% if form.cover_image.errors %}
+                                        <div class="text-danger small">{{ form.cover_image.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="border rounded p-3 text-center bg-light" style="min-height: 120px;" id="dropZone">
+                                        <img id="coverPreview" src="" alt="Cover Preview" class="img-fluid rounded" 
+                                             style="max-height: 100px; display: none;">
+                                        <div id="placeholderText" class="text-muted">
+                                            <i class="bi bi-cloud-upload display-4"></i>
+                                            <p class="small mb-0">Cover Preview</p>
+                                            <small>Drag & drop or click to upload</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Inventory Information -->
+                        <hr>
+                        <h6 class="mb-3">
+                            <i class="bi bi-box me-2"></i>Inventory Information
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="id_total_copies" class="form-label">Total Copies *</label>
+                                    <input type="number" class="form-control" id="id_total_copies" name="total_copies" 
+                                           value="1" min="1" max="100" required>
+                                    <div class="form-text">Number of copies to add to inventory</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="id_location" class="form-label">Shelf Location *</label>
+                                    <input type="text" class="form-control" id="id_location" name="location" 
+                                           placeholder="e.g., A1, B-2, Section 3" maxlength="100" required>
+                                    <div class="form-text">Physical location in library</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="id_condition" class="form-label">Condition</label>
+                                    <select class="form-select" id="id_condition" name="condition">
+                                        <option value="excellent">Excellent</option>
+                                        <option value="good" selected>Good</option>
+                                        <option value="fair">Fair</option>
+                                        <option value="poor">Poor</option>
+                                        <option value="damaged">Damaged</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{% url 'core:book_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <i class="bi bi-check-circle me-2"></i>Add Book
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success/Error Messages -->
+{% if messages %}
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 11">
+        {% for message in messages %}
+            <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    {% if message.tags == 'success' %}
+                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                        <strong class="me-auto">Success</strong>
+                    {% elif message.tags == 'error' %}
+                        <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+                        <strong class="me-auto">Error</strong>
+                    {% endif %}
+                    <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation elements
+    const titleInput = document.getElementById('id_title');
+    const isbnInput = document.getElementById('id_isbn');
+    const authorSelect = document.getElementById('id_author');
+    const categorySelect = document.getElementById('id_category');
+    const publisherSelect = document.getElementById('id_publisher');
+    const locationInput = document.getElementById('id_location');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Title validation
+    titleInput.addEventListener('input', function() {
+        const value = this.value.trim();
+        const errorDiv = document.getElementById('title-error');
+        
+        if (value.length === 0) {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+            errorDiv.textContent = 'Title is required.';
+        } else if (value.length > 300) {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+            errorDiv.textContent = 'Title is too long. Maximum 300 characters allowed.';
+        } else {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+            errorDiv.textContent = '';
+        }
+        validateForm();
+    });
+    
+    // ISBN validation
+    isbnInput.addEventListener('input', function() {
+        const isbn = this.value.trim();
+        const errorDiv = document.getElementById('isbn-error');
+        
+        // Remove all non-alphanumeric characters for validation
+        const cleanIsbn = isbn.replace(/[^0-9X]/g, '');
+        
+        if (isbn.length === 0) {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+            errorDiv.textContent = 'ISBN is required.';
+        } else if (isbn.length > 20) {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+            errorDiv.textContent = 'ISBN is too long. Maximum 20 characters allowed.';
+        } else if (cleanIsbn.length !== 10 && cleanIsbn.length !== 13) {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+            errorDiv.textContent = 'ISBN should be 10 or 13 digits long (excluding hyphens).';
+        } else {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+            errorDiv.textContent = '';
+        }
+        validateForm();
+    });
+    
+    // Location validation
+    locationInput.addEventListener('input', function() {
+        const value = this.value.trim();
+        
+        if (value.length === 0) {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+        } else {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        }
+        validateForm();
+    });
+    
+    // Dropdown validations
+    authorSelect.addEventListener('change', validateForm);
+    categorySelect.addEventListener('change', validateForm);
+    publisherSelect.addEventListener('change', validateForm);
+    
+    function validateForm() {
+        const title = titleInput.value.trim();
+        const isbn = isbnInput.value.trim();
+        const author = authorSelect.value;
+        const category = categorySelect.value;
+        const publisher = publisherSelect.value;
+        const location = locationInput.value.trim();
+        
+        const isValid = title && isbn && author && category && publisher && location &&
+                       !titleInput.classList.contains('is-invalid') && 
+                       !isbnInput.classList.contains('is-invalid') &&
+                       !locationInput.classList.contains('is-invalid');
+        
+        submitBtn.disabled = !isValid;
+    }
+    
+    // Initial validation
+    validateForm();
+    
+    // Book cover preview functionality
+    const coverInput = document.getElementById('id_cover_image');
+    const preview = document.getElementById('coverPreview');
+    const placeholder = document.getElementById('placeholderText');
+    const dropZone = document.getElementById('dropZone');
+    
+    if (coverInput && preview && placeholder && dropZone) {
+        // File input change event
+        coverInput.addEventListener('change', function(e) {
+            handleFileSelect(e.target.files[0]);
+        });
+        
+        // Click on drop zone to trigger file input
+        dropZone.addEventListener('click', function() {
+            coverInput.click();
+        });
+        
+        // Drag and drop functionality
+        dropZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            dropZone.classList.add('border-primary', 'bg-primary', 'bg-opacity-10');
+        });
+        
+        dropZone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            dropZone.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
+        });
+        
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            dropZone.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                coverInput.files = files;
+                handleFileSelect(files[0]);
+            }
+        });
+    }
+    
+    function handleFileSelect(file) {
+        if (!file) {
+            resetPreview();
+            return;
+        }
+        
+        // Validate file type
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+            alert('Please select a valid image file (JPG, PNG, or WebP)');
+            coverInput.value = '';
+            resetPreview();
+            return;
+        }
+        
+        // Validate file size (5MB max)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File size must be less than 5MB');
+            coverInput.value = '';
+            resetPreview();
+            return;
+        }
+        
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            placeholder.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    function resetPreview() {
+        preview.style.display = 'none';
+        placeholder.style.display = 'block';
+        preview.src = '';
+    }
+    
+    // Form submission
+    document.getElementById('addBookForm').addEventListener('submit', function(e) {
+        const title = titleInput.value.trim();
+        const isbn = isbnInput.value.trim();
+        const author = authorSelect.value;
+        const category = categorySelect.value;
+        const publisher = publisherSelect.value;
+        const location = locationInput.value.trim();
+        
+        if (!title || !isbn || !author || !category || !publisher || !location) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+            return false;
+        }
+        
+        // Check for validation errors
+        if (titleInput.classList.contains('is-invalid') || 
+            isbnInput.classList.contains('is-invalid') ||
+            locationInput.classList.contains('is-invalid')) {
+            e.preventDefault();
+            alert('Please fix the validation errors before submitting.');
+            return false;
+        }
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Adding Book...';
+        
+        return true;
+    });
+    
+    // Auto-dismiss toasts
+    const toasts = document.querySelectorAll('.toast');
+    toasts.forEach(function(toast) {
+        setTimeout(function() {
+            toast.classList.remove('show');
+        }, 5000);
+    });
+    
+    // Pages validation
+    document.getElementById('id_pages').addEventListener('input', function() {
+        const value = parseInt(this.value);
+        if (this.value && (value < 1 || value > 10000)) {
+            this.setCustomValidity('Pages must be between 1 and 10,000');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+    
+    // Total copies validation
+    document.getElementById('id_total_copies').addEventListener('input', function() {
+        const value = parseInt(this.value);
+        if (value < 1 || value > 100) {
+            this.setCustomValidity('Total copies must be between 1 and 100');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+    
+    // Publication date validation
+    document.getElementById('id_publication_date').addEventListener('change', function() {
+        const selectedDate = new Date(this.value);
+        const today = new Date();
+        
+        if (selectedDate > today) {
+            this.setCustomValidity('Publication date cannot be in the future');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+});
+</script>
+{% endblock %}

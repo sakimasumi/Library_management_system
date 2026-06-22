@@ -1,0 +1,481 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}System Reports{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'admin_custom:admin_dashboard' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item active">System Reports</li>
+                        </ol>
+                    </nav>
+                    <h1>
+                        <i class="bi bi-graph-up me-2 text-primary"></i>
+                        System Reports
+                    </h1>
+                    <p class="text-muted">Comprehensive library system analytics and statistics</p>
+                </div>
+                <div>
+                    <button class="btn btn-success" onclick="exportReport()">
+                        <i class="bi bi-download me-2"></i>Export Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3>{{ book_stats.total|default:0 }}</h3>
+                            <p class="mb-0">Total Books</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-book fs-1"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small>{{ book_stats.available|default:0 }} Available | {{ book_stats.borrowed|default:0 }} Borrowed</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3>{{ member_stats.total|default:0 }}</h3>
+                            <p class="mb-0">Total Members</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-people fs-1"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small>{{ member_stats.active|default:0 }} Active Members</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3>{{ borrowing_stats.active|default:0 }}</h3>
+                            <p class="mb-0">Active Borrowings</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-arrow-repeat fs-1"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small>{{ borrowing_stats.overdue|default:0 }} Overdue Books</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3>${{ fine_stats.total_amount|default:0 }}</h3>
+                            <p class="mb-0">Outstanding Fines</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-exclamation-triangle fs-1"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small>{{ fine_stats.unpaid|default:0 }} Unpaid Fines</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts and Detailed Reports -->
+    <div class="row">
+        <!-- Popular Books -->
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-trophy me-2"></i>
+                        Most Popular Books
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if popular_books %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Book Title</th>
+                                        <th>Author</th>
+                                        <th>Borrows</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for book in popular_books %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>
+                                            <strong>{{ book.title_of_book|truncatechars:30 }}</strong>
+                                        </td>
+                                        <td>{{ book.author.name }}</td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ book.borrow_count|default:0 }}</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-3">
+                            <i class="bi bi-book fs-1"></i>
+                            <p class="mt-2">No borrowing data available</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Borrowers -->
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-check me-2"></i>
+                        Most Active Borrowers
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if active_borrowers %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Member</th>
+                                        <th>Active Borrows</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for borrower in active_borrowers %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>
+                                            <strong>{{ borrower.user.get_full_name|default:borrower.user.username }}</strong>
+                                            <br><small class="text-muted">{{ borrower.user.email }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-warning">{{ borrower.active_borrow_count|default:0 }}</span>
+                                        </td>
+                                        <td>
+                                            {% if borrower.user.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-3">
+                            <i class="bi bi-people fs-1"></i>
+                            <p class="mt-2">No active borrowers found</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Statistics -->
+    <div class="row">
+        <!-- Book Statistics -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-book me-2"></i>
+                        Book Statistics
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="border-end">
+                                <div class="h4 text-primary mb-0">{{ book_stats.total|default:0 }}</div>
+                                <div class="small text-muted">Total</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border-end">
+                                <div class="h4 text-success mb-0">{{ book_stats.available|default:0 }}</div>
+                                <div class="small text-muted">Available</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="h4 text-warning mb-0">{{ book_stats.borrowed|default:0 }}</div>
+                            <div class="small text-muted">Borrowed</div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="small">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Availability Rate:</span>
+                            <strong class="availability-rate" 
+                                    data-available="{{ book_stats.available|default:0 }}" 
+                                    data-total="{{ book_stats.total|default:0 }}">
+                                0%
+                            </strong>
+                        </div>
+                        <div class="progress mb-2" style="height: 6px;">
+                            <div class="progress-bar bg-success availability-progress" 
+                                 data-available="{{ book_stats.available|default:0 }}" 
+                                 data-total="{{ book_stats.total|default:0 }}" 
+                                 style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Member Statistics -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-people me-2"></i>
+                        Member Statistics
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <div class="h4 text-primary mb-0">{{ member_stats.total|default:0 }}</div>
+                                <div class="small text-muted">Total</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="h4 text-success mb-0">{{ member_stats.active|default:0 }}</div>
+                            <div class="small text-muted">Active</div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="small">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Active Rate:</span>
+                            <strong class="active-rate" 
+                                    data-active="{{ member_stats.active|default:0 }}" 
+                                    data-total="{{ member_stats.total|default:0 }}">
+                                0%
+                            </strong>
+                        </div>
+                        <div class="progress mb-2" style="height: 6px;">
+                            <div class="progress-bar bg-success active-progress" 
+                                 data-active="{{ member_stats.active|default:0 }}" 
+                                 data-total="{{ member_stats.total|default:0 }}" 
+                                 style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Borrowing Statistics -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                        <i class="bi bi-arrow-repeat me-2"></i>
+                        Borrowing Statistics
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="border-end">
+                                <div class="h5 text-primary mb-0">{{ borrowing_stats.total|default:0 }}</div>
+                                <div class="small text-muted">Total</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border-end">
+                                <div class="h5 text-warning mb-0">{{ borrowing_stats.active|default:0 }}</div>
+                                <div class="small text-muted">Active</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="h5 text-danger mb-0">{{ borrowing_stats.overdue|default:0 }}</div>
+                            <div class="small text-muted">Overdue</div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="small">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Overdue Rate:</span>
+                            <strong class="overdue-rate" 
+                                    data-overdue="{{ borrowing_stats.overdue|default:0 }}" 
+                                    data-active="{{ borrowing_stats.active|default:0 }}">
+                                0%
+                            </strong>
+                        </div>
+                        <div class="progress mb-2" style="height: 6px;">
+                            <div class="progress-bar overdue-progress" 
+                                 data-overdue="{{ borrowing_stats.overdue|default:0 }}" 
+                                 data-active="{{ borrowing_stats.active|default:0 }}" 
+                                 style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Trends Chart -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-up me-2"></i>
+                        Monthly Trends
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="trendsChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Calculate and set progress bar widths using JavaScript
+    calculateProgressBars();
+    
+    // Monthly Trends Chart
+    const ctx = document.getElementById('trendsChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            datasets: [{
+                label: 'Books Borrowed',
+                data: [65, 59, 80, 81, 56, 55, 40, 45, 60, 70, 65, 75],
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                tension: 0.1
+            }, {
+                label: 'New Members',
+                data: [28, 48, 40, 19, 86, 27, 90, 35, 45, 30, 25, 40],
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                tension: 0.1
+            }, {
+                label: 'Books Added',
+                data: [12, 19, 15, 25, 22, 30, 18, 20, 25, 28, 22, 35],
+                borderColor: 'rgb(54, 162, 235)',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+
+function calculateProgressBars() {
+    // Book availability progress
+    const availabilityRate = document.querySelector('.availability-rate');
+    const availabilityProgress = document.querySelector('.availability-progress');
+    
+    if (availabilityRate && availabilityProgress) {
+        const available = parseInt(availabilityRate.dataset.available) || 0;
+        const total = parseInt(availabilityRate.dataset.total) || 0;
+        const percentage = total > 0 ? Math.round((available / total) * 100) : 0;
+        
+        availabilityRate.textContent = percentage + '%';
+        availabilityProgress.style.width = percentage + '%';
+    }
+    
+    // Member active progress
+    const activeRate = document.querySelector('.active-rate');
+    const activeProgress = document.querySelector('.active-progress');
+    
+    if (activeRate && activeProgress) {
+        const active = parseInt(activeRate.dataset.active) || 0;
+        const total = parseInt(activeRate.dataset.total) || 0;
+        const percentage = total > 0 ? Math.round((active / total) * 100) : 0;
+        
+        activeRate.textContent = percentage + '%';
+        activeProgress.style.width = percentage + '%';
+    }
+    
+    // Borrowing overdue progress
+    const overdueRate = document.querySelector('.overdue-rate');
+    const overdueProgress = document.querySelector('.overdue-progress');
+    
+    if (overdueRate && overdueProgress) {
+        const overdue = parseInt(overdueRate.dataset.overdue) || 0;
+        const active = parseInt(overdueRate.dataset.active) || 0;
+        const percentage = active > 0 ? Math.round((overdue / active) * 100) : 0;
+        
+        overdueRate.textContent = percentage + '%';
+        if (percentage > 0) {
+            overdueProgress.className = 'progress-bar bg-danger';
+            overdueProgress.style.width = percentage + '%';
+            overdueRate.className = 'overdue-rate text-danger';
+        } else {
+            overdueProgress.className = 'progress-bar bg-success';
+            overdueProgress.style.width = '100%';
+            overdueRate.className = 'overdue-rate text-success';
+        }
+    }
+}
+
+function exportReport() {
+    // This would typically generate and download a PDF or Excel report
+    alert('Report export functionality would be implemented here!');
+}
+</script>
+{% endblock %}

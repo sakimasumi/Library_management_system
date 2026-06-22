@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Update Inventory - {{ book.title_of_book }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-box me-2"></i>Update Inventory: {{ book.title_of_book }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="inventoryForm">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="total_copies" class="form-label">Total Copies *</label>
+                                    <input type="number" class="form-control" id="total_copies" name="total_copies" 
+                                           value="{{ inventory.total_copies }}" min="1" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="shelf_location" class="form-label">Shelf Location *</label>
+                                    <input type="text" class="form-control" id="shelf_location" name="shelf_location" 
+                                           value="{{ inventory.shelf_location }}" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="available_copies" class="form-label">Available</label>
+                                    <input type="number" class="form-control" id="available_copies" name="available_copies" 
+                                           value="{{ inventory.available_copies }}" min="0">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="borrowed_copies" class="form-label">Borrowed</label>
+                                    <input type="number" class="form-control" id="borrowed_copies" name="borrowed_copies" 
+                                           value="{{ inventory.borrowed_copies }}" min="0">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="reserved_copies" class="form-label">Reserved</label>
+                                    <input type="number" class="form-control" id="reserved_copies" name="reserved_copies" 
+                                           value="{{ inventory.reserved_copies }}" min="0">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="damaged_copies" class="form-label">Damaged</label>
+                                    <input type="number" class="form-control" id="damaged_copies" name="damaged_copies" 
+                                           value="{{ inventory.damaged_copies }}" min="0">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Total Validation:</strong> Available + Borrowed + Reserved + Damaged must equal Total Copies.
+                            <br><span id="calculation-result"></span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'core:book_detail' book.book_id %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <i class="bi bi-check-circle me-2"></i>Update Inventory
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = ['total_copies', 'available_copies', 'borrowed_copies', 'reserved_copies', 'damaged_copies'];
+    const submitBtn = document.getElementById('submitBtn');
+    const result = document.getElementById('calculation-result');
+    
+    function validateTotal() {
+        const total = parseInt(document.getElementById('total_copies').value) || 0;
+        const available = parseInt(document.getElementById('available_copies').value) || 0;
+        const borrowed = parseInt(document.getElementById('borrowed_copies').value) || 0;
+        const reserved = parseInt(document.getElementById('reserved_copies').value) || 0;
+        const damaged = parseInt(document.getElementById('damaged_copies').value) || 0;
+        
+        const sum = available + borrowed + reserved + damaged;
+        
+        if (sum === total) {
+            result.innerHTML = `<span class="text-success">✓ Valid: ${sum} = ${total}</span>`;
+            submitBtn.disabled = false;
+        } else {
+            result.innerHTML = `<span class="text-danger">✗ Invalid: ${sum} ≠ ${total}</span>`;
+            submitBtn.disabled = true;
+        }
+    }
+    
+    inputs.forEach(inputId => {
+        document.getElementById(inputId).addEventListener('input', validateTotal);
+    });
+    
+    validateTotal(); // Initial validation
+});
+</script>
+{% endblock %}

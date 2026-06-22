@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Donation Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-gift me-2 text-primary"></i>
+                    Donation Details
+                </h1>
+                <div>
+                    <a href="{% url 'core:manage_donations' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Donations
+                    </a>
+                    <a href="{% url 'core:update_donation' donation.id %}" class="btn btn-warning">
+                        <i class="bi bi-pencil me-2"></i>Edit
+                    </a>
+                    <a href="{% url 'core:delete_donation' donation.id %}" class="btn btn-danger">
+                        <i class="bi bi-trash me-2"></i>Delete
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Donation Information -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Donation Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Status Badge -->
+                    <div class="mb-3">
+                        {% if donation.is_processed %}
+                            <span class="badge bg-success fs-6">
+                                <i class="bi bi-check-circle me-1"></i>Processed
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning fs-6">
+                                <i class="bi bi-clock me-1"></i>Pending
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Book Details -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3">
+                                <i class="bi bi-book me-2"></i>Book Information
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold" style="width: 30%;">Title:</td>
+                                    <td>{{ donation.title_of_book }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">ISBN:</td>
+                                    <td>{{ donation.book_id_isbn }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Author:</td>
+                                    <td>{{ donation.author.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Publisher:</td>
+                                    <td>{{ donation.publisher.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Category:</td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ donation.category.name }}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold" style="width: 30%;">Quantity:</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ donation.quantity }} book{{ donation.quantity|pluralize }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Condition:</td>
+                                    <td>
+                                        <span class="badge bg-{{ donation.state_of_book|default:'secondary' }}">
+                                            {{ donation.get_state_of_book_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Donation Date:</td>
+                                    <td>{{ donation.donate_date|date:"F d, Y" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Donor Details -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3">
+                                <i class="bi bi-person me-2"></i>Donor Information
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold" style="width: 30%;">Name:</td>
+                                    <td>{{ donation.donor_name }}</td>
+                                </tr>
+                                {% if donation.donor_email %}
+                                <tr>
+                                    <td class="fw-bold">Email:</td>
+                                    <td>
+                                        <a href="mailto:{{ donation.donor_email }}">{{ donation.donor_email }}</a>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% if donation.donor_phone %}
+                                <tr>
+                                    <td class="fw-bold">Phone:</td>
+                                    <td>
+                                        <a href="tel:{{ donation.donor_phone }}">{{ donation.donor_phone }}</a>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    {% if donation.notes %}
+                    <div class="row">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3">
+                                <i class="bi bi-chat-text me-2"></i>Notes
+                            </h6>
+                            <div class="bg-light p-3 rounded">
+                                {{ donation.notes|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Linked Books -->
+            {% if linked_books %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-link me-2"></i>
+                        Linked Books in Inventory
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Book</th>
+                                    <th>Total Copies</th>
+                                    <th>Available</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for book in linked_books %}
+                                <tr>
+                                    <td>
+                                        <div>
+                                            <strong>{{ book.title_of_book }}</strong><br>
+                                            <small class="text-muted">{{ book.author.name }}</small>
+                                        </div>
+                                    </td>
+                                    <td>{{ book.inventory.total_copies }}</td>
+                                    <td>{{ book.inventory.available_copies }}</td>
+                                    <td>
+                                        {% if book.is_available %}
+                                            <span class="badge bg-success">Available</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Borrowed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'core:book_detail' book.book_id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Book Cover and Actions -->
+        <div class="col-lg-4">
+            <!-- Book Cover -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-image me-2"></i>Book Cover
+                    </h6>
+                </div>
+                <div class="card-body text-center">
+                    {% if donation.book_cover %}
+                        <img src="{{ donation.book_cover.url }}" alt="{{ donation.title_of_book }}" 
+                             class="img-fluid rounded shadow" style="max-height: 300px;">
+                    {% else %}
+                        <div class="bg-light d-flex align-items-center justify-content-center rounded" 
+                             style="height: 200px;">
+                            <div class="text-center">
+                                <i class="bi bi-book display-4 text-muted"></i>
+                                <p class="text-muted mt-2">No cover image</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightning me-2"></i>Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body d-grid gap-2">
+                    {% if donation.donor_email %}
+                        <button class="btn btn-outline-success" onclick="sendThankYou('{{ donation.id }}')">
+                            <i class="bi bi-envelope-heart me-2"></i>Send Thank You Email
+                        </button>
+                    {% endif %}
+                    
+                    <a href="{% url 'core:update_donation' donation.id %}" class="btn btn-outline-warning">
+                        <i class="bi bi-pencil me-2"></i>Edit Donation
+                    </a>
+                    
+                    <hr>
+                    
+                    <a href="{% url 'core:delete_donation' donation.id %}" class="btn btn-outline-danger">
+                        <i class="bi bi-trash me-2"></i>Delete Donation
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function sendThankYou(donationId) {
+    if (confirm('Send thank you email to donor?')) {
+        fetch(`/core/ajax/send-thank-you/${donationId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Thank you email sent successfully!');
+            } else {
+                alert('Error: ' + data.error);
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

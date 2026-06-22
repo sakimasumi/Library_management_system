@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Donations{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-gift me-2 text-primary"></i>
+                    Manage Donations
+                </h1>
+                <div>
+                    <a href="{% url 'core:add_donation' %}" class="btn btn-success">
+                        <i class="bi bi-plus-circle me-2"></i>Record New Donation
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5>Total Donations</h5>
+                    <h2>{{ total_donations }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5>Books Donated</h5>
+                    <h2>{{ total_books }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5>This Month</h5>
+                    <h2>{{ this_month }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5>Unique Donors</h5>
+                    <h2>{{ unique_donors }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Donations Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Donations</h5>
+                </div>
+                <div class="card-body">
+                    {% if donations %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">                                <thead>
+                                    <tr>
+                                        <th>Donor</th>
+                                        <th>Book Details</th>
+                                        <th>Date</th>
+                                        <th>Condition</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>                                    {% for donation in donations %}
+                                    <tr>
+                                        <td>
+                                            <div>
+                                                <strong>{{ donation.donor_name }}</strong>
+                                                {% if donation.donor_email %}
+                                                    <br><small class="text-muted">{{ donation.donor_email }}</small>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <strong>{{ donation.title_of_book }}</strong>
+                                                <br><small class="text-muted">{{ donation.author.name }} • {{ donation.category.name }}</small>
+                                                <br><span class="badge bg-info">{{ donation.quantity }} book{{ donation.quantity|pluralize }}</span>
+                                            </div>
+                                        </td>
+                                        <td>{{ donation.donate_date|date:"M d, Y" }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ donation.state_of_book|default:'secondary' }}">
+                                                {{ donation.get_state_of_book_display|default:'Unknown' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{% url 'core:donation_detail' donation.id %}" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <button class="btn btn-sm btn-outline-success" 
+                                                        onclick="sendThankYou('{{ donation.id }}')">
+                                                    <i class="bi bi-envelope-heart"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-gift display-1 text-muted"></i>
+                            <h5 class="mt-3">No donations recorded</h5>
+                            <a href="{% url 'core:add_donation' %}" class="btn btn-success">
+                                <i class="bi bi-plus-circle me-2"></i>Record First Donation
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function sendThankYou(donationId) {
+    if (confirm('Send thank you email to donor?')) {
+        fetch(`/core/ajax/send-thank-you/${donationId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Thank you email sent successfully!');
+            } else {
+                alert('Error: ' + data.error);
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

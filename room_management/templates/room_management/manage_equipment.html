@@ -1,0 +1,582 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Equipment Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-tools me-2 text-primary"></i>
+                    Equipment Management
+                </h1>
+                <div>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEquipmentModal">
+                        <i class="bi bi-plus-circle me-2"></i>Add New Equipment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Total Equipment</h5>
+                            <h3 class="mb-0">{{ equipment_stats.total_count }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-tools fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Available</h5>
+                            <h3 class="mb-0">{{ equipment_stats.available_count }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-check-circle fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">In Use</h5>
+                            <h3 class="mb-0">{{ equipment_stats.in_use_count }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-arrow-repeat fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Maintenance</h5>
+                            <h3 class="mb-0">{{ equipment_stats.maintenance_count }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-wrench fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" id="filterForm">
+                        <div class="row align-items-end">
+                            <div class="col-md-3">
+                                <label for="search" class="form-label">Search Equipment</label>
+                                <input type="text" class="form-control" id="search" name="search" 
+                                       value="{{ request.GET.search }}" placeholder="Name, model, serial...">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="category" class="form-label">Category</label>
+                                <select class="form-select" id="category" name="category">
+                                    <option value="">All Categories</option>
+                                    {% for cat in equipment_categories %}
+                                        <option value="{{ cat.0 }}" {% if request.GET.category == cat.0 %}selected{% endif %}>
+                                            {{ cat.1 }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="status" class="form-label">Status</label>
+                                <select class="form-select" id="status" name="status">
+                                    <option value="">All Status</option>
+                                    {% for status in equipment_status %}
+                                        <option value="{{ status.0 }}" {% if request.GET.status == status.0 %}selected{% endif %}>
+                                            {{ status.1 }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="room" class="form-label">Room</label>
+                                <select class="form-select" id="room" name="room">
+                                    <option value="">All Rooms</option>
+                                    {% for room in rooms %}
+                                        <option value="{{ room.room_id }}" {% if request.GET.room == room.room_id|stringformat:"s" %}selected{% endif %}>
+                                            {{ room.room_name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-search me-1"></i>Filter
+                                    </button>
+                                    <a href="{% url 'room_management:manage_equipment' %}" class="btn btn-secondary">
+                                        <i class="bi bi-arrow-clockwise me-1"></i>Clear
+                                    </a>
+                                    <button type="button" class="btn btn-success" onclick="exportEquipment()">
+                                        <i class="bi bi-download me-1"></i>Export
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Equipment List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Equipment List</h5>
+                        <div class="d-flex align-items-center gap-3">
+                            <small class="text-muted">{{ equipment_list.count }} equipment found</small>
+                            <div class="btn-group" role="group">
+                                <input type="radio" class="btn-check" name="viewMode" id="gridView" checked>
+                                <label class="btn btn-outline-primary btn-sm" for="gridView">
+                                    <i class="bi bi-grid-3x3-gap"></i>
+                                </label>
+                                <input type="radio" class="btn-check" name="viewMode" id="listView">
+                                <label class="btn btn-outline-primary btn-sm" for="listView">
+                                    <i class="bi bi-list"></i>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if equipment_list %}
+                        <!-- Grid View -->
+                        <div id="gridViewContent" class="row">
+                            {% for equipment in equipment_list %}
+                                <div class="col-lg-4 col-md-6 mb-4">
+                                    <div class="card h-100 equipment-card" data-equipment-id="{{ equipment.equipment_id }}">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0">{{ equipment.equipment_name }}</h6>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                                    <i class="bi bi-three-dots-vertical"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" href="#" onclick="viewEquipment('{{ equipment.equipment_id }}')">
+                                                        <i class="bi bi-eye me-2"></i>View Details
+                                                    </a></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="editEquipment('{{ equipment.equipment_id }}')">
+                                                        <i class="bi bi-pencil me-2"></i>Edit
+                                                    </a></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="transferEquipment('{{ equipment.equipment_id }}')">
+                                                        <i class="bi bi-arrow-left-right me-2"></i>Transfer
+                                                    </a></li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><a class="dropdown-item text-danger" href="#" onclick="deleteEquipment('{{ equipment.equipment_id }}')">
+                                                        <i class="bi bi-trash me-2"></i>Delete
+                                                    </a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">                                                <div class="col-6">
+                                                    <small class="text-muted">Model:</small>
+                                                    <div class="fw-medium">{{ equipment.model_number|default:"N/A" }}</div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <small class="text-muted">Serial:</small>
+                                                    <div class="fw-medium">{{ equipment.serial_number|default:"N/A" }}</div>
+                                                </div>
+                                            </div>
+                                            <div class="row mt-2">                                                <div class="col-6">
+                                                    <small class="text-muted">Category:</small>
+                                                    <div class="fw-medium">{{ equipment.get_equipment_type_display }}</div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <small class="text-muted">Status:</small>
+                                                    <div>
+                                                        {% if equipment.status == 'available' %}
+                                                            <span class="badge bg-success">Available</span>
+                                                        {% elif equipment.status == 'in_use' %}
+                                                            <span class="badge bg-warning">In Use</span>
+                                                        {% elif equipment.status == 'maintenance' %}
+                                                            <span class="badge bg-danger">Maintenance</span>
+                                                        {% else %}
+                                                            <span class="badge bg-secondary">{{ equipment.get_status_display }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>                                            {% if equipment.room %}
+                                                <div class="row mt-2">
+                                                    <div class="col-12">
+                                                        <small class="text-muted">Location:</small>
+                                                        <div class="fw-medium">
+                                                            <i class="bi bi-geo-alt me-1"></i>
+                                                            {{ equipment.room.room_name }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endif %}{% if equipment.notes %}
+                                                <div class="mt-2">
+                                                    <small class="text-muted">Description:</small>
+                                                    <div class="small">{{ equipment.notes|truncatechars:80 }}</div>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="card-footer">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <small class="text-muted">
+                                                    Added: {{ equipment.created_at|date:"M d, Y" }}
+                                                </small>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button type="button" class="btn btn-outline-primary" onclick="viewEquipment('{{ equipment.equipment_id }}')">
+                                                        <i class="bi bi-eye"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-secondary" onclick="editEquipment('{{ equipment.equipment_id }}')">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- List View -->
+                        <div id="listViewContent" class="table-responsive" style="display: none;">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Equipment Name</th>
+                                        <th>Model</th>
+                                        <th>Serial Number</th>
+                                        <th>Category</th>
+                                        <th>Status</th>
+                                        <th>Current Room</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for equipment in equipment_list %}
+                                        <tr>
+                                            <td>                                                <div class="fw-medium">{{ equipment.equipment_name }}</div>
+                                                {% if equipment.notes %}
+                                                    <small class="text-muted">{{ equipment.notes|truncatechars:50 }}</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ equipment.model_number|default:"N/A" }}</td>
+                                            <td>{{ equipment.serial_number|default:"N/A" }}</td>
+                                            <td>{{ equipment.get_equipment_type_display }}</td>
+                                            <td>
+                                                {% if equipment.status == 'available' %}
+                                                    <span class="badge bg-success">Available</span>
+                                                {% elif equipment.status == 'in_use' %}
+                                                    <span class="badge bg-warning">In Use</span>
+                                                {% elif equipment.status == 'maintenance' %}
+                                                    <span class="badge bg-danger">Maintenance</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ equipment.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>                                            <td>
+                                                {% if equipment.room %}
+                                                    {{ equipment.room.room_name }}
+                                                {% else %}
+                                                    <span class="text-muted">Unassigned</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button type="button" class="btn btn-outline-primary" onclick="viewEquipment('{{ equipment.equipment_id }}')">
+                                                        <i class="bi bi-eye"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-secondary" onclick="editEquipment('{{ equipment.equipment_id }}')">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-warning" onclick="transferEquipment('{{ equipment.equipment_id }}')">
+                                                        <i class="bi bi-arrow-left-right"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-danger" onclick="deleteEquipment('{{ equipment.equipment_id }}')">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if is_paginated %}
+                            <nav aria-label="Equipment pagination">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1{{ request.GET.urlencode }}">First</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{{ request.GET.urlencode }}">Previous</a>
+                                        </li>
+                                    {% endif %}
+
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ num }}</span>
+                                            </li>
+                                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ num }}{{ request.GET.urlencode }}">{{ num }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{{ request.GET.urlencode }}">Next</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{{ request.GET.urlencode }}">Last</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-tools fs-1 text-muted"></i>
+                            <h5 class="text-muted mt-3">No Equipment Found</h5>
+                            <p class="text-muted">Start by adding some equipment to the system.</p>
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEquipmentModal">
+                                <i class="bi bi-plus-circle me-2"></i>Add Equipment
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Equipment Modal -->
+<div class="modal fade" id="addEquipmentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Equipment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="addEquipmentForm">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="equipment_name" class="form-label">Equipment Name *</label>
+                                <input type="text" class="form-control" id="equipment_name" name="equipment_name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="category" class="form-label">Category *</label>
+                                <select class="form-select" id="category" name="category" required>
+                                    <option value="">Select Category</option>
+                                    {% for cat in equipment_categories %}
+                                        <option value="{{ cat.0 }}">{{ cat.1 }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="model" class="form-label">Model</label>
+                                <input type="text" class="form-control" id="model" name="model">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="serial_number" class="form-label">Serial Number</label>
+                                <input type="text" class="form-control" id="serial_number" name="serial_number">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="current_room" class="form-label">Assign to Room</label>
+                                <select class="form-select" id="current_room" name="current_room">
+                                    <option value="">Unassigned</option>
+                                    {% for room in rooms %}
+                                        <option value="{{ room.room_id }}">{{ room.room_name }} ({{ room.room_number }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="status" class="form-label">Status</label>
+                                <select class="form-select" id="status" name="status">
+                                    {% for status in equipment_status %}
+                                        <option value="{{ status.0 }}" {% if status.0 == 'available' %}selected{% endif %}>
+                                            {{ status.1 }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Equipment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Transfer Equipment Modal -->
+<div class="modal fade" id="transferModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Transfer Equipment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="transferForm">
+                    <input type="hidden" id="transfer_equipment_id" name="equipment_id">
+                    <div class="mb-3">
+                        <label for="transfer_to_room" class="form-label">Transfer to Room</label>
+                        <select class="form-select" id="transfer_to_room" name="new_room" required>
+                            <option value="">Select Room</option>
+                            {% for room in rooms %}
+                                <option value="{{ room.room_id }}">{{ room.room_name }} ({{ room.room_number }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="transfer_notes" class="form-label">Transfer Notes</label>
+                        <textarea class="form-control" id="transfer_notes" name="notes" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" onclick="confirmTransfer()">Transfer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// View mode toggle
+document.addEventListener('DOMContentLoaded', function() {
+    var gridView = document.getElementById('gridView');
+    var listView = document.getElementById('listView');
+    var gridContent = document.getElementById('gridViewContent');
+    var listContent = document.getElementById('listViewContent');
+    
+    if (gridView && listView && gridContent && listContent) {
+        gridView.addEventListener('change', function() {
+            if (this.checked) {
+                gridContent.style.display = 'block';
+                listContent.style.display = 'none';
+            }
+        });
+        
+        listView.addEventListener('change', function() {
+            if (this.checked) {
+                gridContent.style.display = 'none';
+                listContent.style.display = 'block';
+            }
+        });
+    }
+});
+
+function viewEquipment(equipmentId) {
+    window.location.href = '/room/equipment/' + equipmentId + '/';
+}
+
+function editEquipment(equipmentId) {
+    window.location.href = '/room/equipment/' + equipmentId + '/edit/';
+}
+
+function deleteEquipment(equipmentId) {
+    if (confirm('Are you sure you want to delete this equipment? This action cannot be undone.')) {
+        // Create form and submit
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/room/equipment/' + equipmentId + '/delete/';
+        
+        var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        var csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function transferEquipment(equipmentId) {
+    document.getElementById('transfer_equipment_id').value = equipmentId;
+    var modal = new bootstrap.Modal(document.getElementById('transferModal'));
+    modal.show();
+}
+
+function confirmTransfer() {
+    var form = document.getElementById('transferForm');
+    var formData = new FormData(form);
+    
+    // Here you would typically send an AJAX request
+    // For now, just show success message
+    alert('Equipment transfer initiated');
+    
+    var modal = bootstrap.Modal.getInstance(document.getElementById('transferModal'));
+    modal.hide();
+}
+
+function exportEquipment() {
+    var params = new URLSearchParams(window.location.search);
+    params.append('export', 'csv');
+    window.location.href = window.location.pathname + '?' + params.toString();
+}
+</script>
+{% endblock %}

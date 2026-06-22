@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Publisher{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-building-add me-2 text-success"></i>
+                    Add New Publisher
+                </h1>
+                <div>
+                    <a href="{% url 'core:manage_publishers' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Publishers
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Publisher Form -->
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Publisher Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Publisher Name (Required) -->
+                        <div class="mb-3">
+                            <label for="id_name" class="form-label">Publisher Name *</label>
+                            <input type="text" class="form-control" id="id_name" name="name" required 
+                                   placeholder="Enter publisher name" maxlength="200">
+                            {% if form.name.errors %}
+                                <div class="text-danger small">{{ form.name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Address (Optional) -->
+                        <div class="mb-3">
+                            <label for="id_address" class="form-label">Address</label>
+                            <textarea class="form-control" id="id_address" name="address" rows="3" 
+                                      placeholder="Enter publisher address (optional)"></textarea>
+                            {% if form.address.errors %}
+                                <div class="text-danger small">{{ form.address.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <!-- Website (Optional) -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_website" class="form-label">Website</label>
+                                    <input type="url" class="form-control" id="id_website" name="website" 
+                                           placeholder="https://www.example.com">
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Enter the complete URL (e.g., https://www.publisher.com)
+                                    </div>
+                                    {% if form.website.errors %}
+                                        <div class="text-danger small">{{ form.website.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Established Year (Optional) -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_established_year" class="form-label">Established Year</label>
+                                    <input type="number" class="form-control" id="id_established_year" name="established_year" 
+                                           placeholder="e.g., 1985" min="1800" max="2024">
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Year the publisher was established
+                                    </div>
+                                    {% if form.established_year.errors %}
+                                        <div class="text-danger small">{{ form.established_year.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'core:manage_publishers' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-2"></i>Add Publisher
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success/Error Messages -->
+{% if messages %}
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 11">
+        {% for message in messages %}
+            <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    {% if message.tags == 'success' %}
+                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                        <strong class="me-auto">Success</strong>
+                    {% elif message.tags == 'error' %}
+                        <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+                        <strong class="me-auto">Error</strong>
+                    {% endif %}
+                    <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Form validation
+document.getElementById('id_name').addEventListener('input', function() {
+    const value = this.value.trim();
+    const submitBtn = document.querySelector('button[type="submit"]');
+    
+    if (value.length === 0) {
+        this.classList.add('is-invalid');
+        submitBtn.disabled = true;
+    } else {
+        this.classList.remove('is-invalid');
+        this.classList.add('is-valid');
+        submitBtn.disabled = false;
+    }
+});
+
+// Website URL validation
+document.getElementById('id_website').addEventListener('input', function() {
+    const value = this.value.trim();
+    
+    if (value && !value.match(/^https?:\/\/.+/)) {
+        this.classList.add('is-invalid');
+        this.setCustomValidity('Please enter a valid URL starting with http:// or https://');
+    } else {
+        this.classList.remove('is-invalid');
+        this.setCustomValidity('');
+        if (value) {
+            this.classList.add('is-valid');
+        }
+    }
+});
+
+// Established year validation
+document.getElementById('id_established_year').addEventListener('input', function() {
+    const value = parseInt(this.value);
+    const currentYear = new Date().getFullYear();
+    
+    if (this.value && (value < 1800 || value > currentYear)) {
+        this.classList.add('is-invalid');
+        this.setCustomValidity(`Please enter a year between 1800 and ${currentYear}`);
+    } else {
+        this.classList.remove('is-invalid');
+        this.setCustomValidity('');
+        if (this.value) {
+            this.classList.add('is-valid');
+        }
+    }
+});
+
+// Auto-dismiss toasts
+document.addEventListener('DOMContentLoaded', function() {
+    const toasts = document.querySelectorAll('.toast');
+    toasts.forEach(function(toast) {
+        setTimeout(function() {
+            toast.classList.remove('show');
+        }, 5000);
+    });
+});
+</script>
+{% endblock %}

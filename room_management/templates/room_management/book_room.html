@@ -1,0 +1,374 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Book Room{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'room_management:room_bookings' %}">Bookings</a></li>
+                            <li class="breadcrumb-item active">Book Room</li>
+                        </ol>
+                    </nav>
+                    <h1>
+                        <i class="bi bi-calendar-plus me-2 text-primary"></i>
+                        Book Room
+                    </h1>
+                    <p class="text-muted">Create a new room booking</p>
+                </div>
+                <div>
+                    <a href="{% url 'room_management:room_bookings' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Bookings
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Form -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Booking Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="bookRoomForm">
+                        {% csrf_token %}
+                        
+                        <!-- Room Selection -->
+                        <div class="mb-4">
+                            <label for="{{ form.room.id_for_label }}" class="form-label">Select Room *</label>
+                            {{ form.room }}
+                            {% if form.room.errors %}
+                                <div class="text-danger small">{{ form.room.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text">Choose from available rooms</div>
+                        </div>
+
+                        <!-- Date and Time -->
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.booking_date.id_for_label }}" class="form-label">Booking Date *</label>
+                                    {{ form.booking_date }}
+                                    {% if form.booking_date.errors %}
+                                        <div class="text-danger small">{{ form.booking_date.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.start_time.id_for_label }}" class="form-label">Start Time *</label>
+                                    {{ form.start_time }}
+                                    {% if form.start_time.errors %}
+                                        <div class="text-danger small">{{ form.start_time.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.end_time.id_for_label }}" class="form-label">End Time *</label>
+                                    {{ form.end_time }}
+                                    {% if form.end_time.errors %}
+                                        <div class="text-danger small">{{ form.end_time.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Availability Check -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="alert alert-info d-none" id="availabilityAlert">
+                                    <div class="d-flex align-items-center">
+                                        <div class="spinner-border spinner-border-sm me-3" role="status" id="checkingSpinner">
+                                            <span class="visually-hidden">Checking...</span>
+                                        </div>
+                                        <div id="availabilityMessage">Checking availability...</div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary" id="checkAvailabilityBtn">
+                                    <i class="bi bi-search me-2"></i>Check Availability
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Purpose and Details -->
+                        <div class="mb-3">
+                            <label for="{{ form.purpose.id_for_label }}" class="form-label">Purpose *</label>
+                            {{ form.purpose }}
+                            {% if form.purpose.errors %}
+                                <div class="text-danger small">{{ form.purpose.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text">Describe the purpose of this booking</div>
+                        </div>
+
+                        <!-- Attendees -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.attendees_count.id_for_label }}" class="form-label">Number of Attendees *</label>
+                                    {{ form.attendees_count }}
+                                    {% if form.attendees_count.errors %}
+                                        <div class="text-danger small">{{ form.attendees_count.errors.0 }}</div>
+                                    {% endif %}
+                                    <div class="form-text">How many people will use this room?</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Duration</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="durationDisplay" readonly>
+                                        <span class="input-group-text">hours</span>
+                                    </div>
+                                    <div class="form-text">Calculated automatically</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="text-danger small">{{ form.notes.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text">Additional information about this booking</div>
+                        </div>
+
+                        <!-- Special Requirements -->
+                        <div class="mb-4">
+                            <label for="{{ form.special_requirements.id_for_label }}" class="form-label">Special Requirements</label>
+                            {{ form.special_requirements }}
+                            {% if form.special_requirements.errors %}
+                                <div class="text-danger small">{{ form.special_requirements.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text">Any special setup or equipment needs</div>
+                        </div>                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'room_management:room_bookings' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-outline-primary" onclick="resetForm()">
+                                    <i class="bi bi-arrow-clockwise me-2"></i>Reset
+                                </button>
+                                <button type="submit" class="btn btn-primary" id="submitBtn">
+                                    <i class="bi bi-check-circle me-2"></i>Book Room (Free for Education)
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Available Rooms -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-building me-2"></i>
+                        Available Rooms
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-0">Select a room from the dropdown above</p>
+                </div>
+            </div>
+
+            <!-- Booking Guidelines -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Booking Guidelines
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled small mb-0">                        <li class="mb-2">
+                            <i class="bi bi-check text-success me-2"></i>
+                            All rooms are free for students and professors
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check text-success me-2"></i>
+                            Bookings must be at least 1 hour in advance
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check text-success me-2"></i>
+                            Maximum booking duration is 8 hours
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check text-success me-2"></i>
+                            Check room capacity before booking
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check text-success me-2"></i>
+                            Bookings require approval for confirmation
+                        </li>
+                        <li class="mb-0">
+                            <i class="bi bi-check text-success me-2"></i>
+                            Cancel at least 2 hours before start time
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Quick Times -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-clock me-2"></i>
+                        Quick Time Selection
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <button type="button" class="btn btn-outline-secondary btn-sm w-100" onclick="setQuickTime('09:00', '10:00')">
+                                9-10 AM
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button type="button" class="btn btn-outline-secondary btn-sm w-100" onclick="setQuickTime('10:00', '12:00')">
+                                10-12 PM
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button type="button" class="btn btn-outline-secondary btn-sm w-100" onclick="setQuickTime('13:00', '15:00')">
+                                1-3 PM
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button type="button" class="btn btn-outline-secondary btn-sm w-100" onclick="setQuickTime('15:00', '17:00')">
+                                3-5 PM
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var roomSelect = document.getElementById('{{ form.room.id_for_label }}');
+    var startTimeInput = document.getElementById('{{ form.start_time.id_for_label }}');
+    var endTimeInput = document.getElementById('{{ form.end_time.id_for_label }}');
+    var attendeesInput = document.getElementById('{{ form.attendees_count.id_for_label }}');
+    var checkAvailabilityBtn = document.getElementById('checkAvailabilityBtn');
+
+    // Simple room data for capacity validation only
+    var roomCapacities = {
+        'F101': 12,
+        'F102': 20,
+        'F104': 12
+    };
+
+    // Calculate duration only
+    function updateDuration() {
+        var startTime = startTimeInput.value;
+        var endTime = endTimeInput.value;
+        
+        if (startTime && endTime) {
+            var start = new Date('2000-01-01 ' + startTime);
+            var end = new Date('2000-01-01 ' + endTime);
+            
+            if (end > start) {
+                var hours = (end - start) / (1000 * 60 * 60);
+                document.getElementById('durationDisplay').value = hours.toFixed(1);
+                document.getElementById('durationCostDisplay').textContent = hours.toFixed(1) + ' hours';
+            } else {
+                document.getElementById('durationDisplay').value = '';
+                document.getElementById('durationCostDisplay').textContent = '0 hours';
+            }
+        }
+    }
+
+    // Validate room capacity
+    function validateCapacity() {
+        var selectedRoomId = roomSelect.value;
+        var attendees = parseInt(attendeesInput.value) || 0;
+        
+        if (selectedRoomId && roomCapacities[selectedRoomId] && attendees > 0) {
+            var capacity = roomCapacities[selectedRoomId];
+            if (attendees > capacity) {
+                attendeesInput.classList.add('is-invalid');
+                alert('This room can only accommodate ' + capacity + ' people. Please select a different room or reduce attendees.');
+            } else {
+                attendeesInput.classList.remove('is-invalid');
+            }
+        }
+    }
+
+    // Event listeners
+    roomSelect.addEventListener('change', function() {
+        updateDuration();
+        validateCapacity();
+    });
+    
+    startTimeInput.addEventListener('change', updateDuration);
+    endTimeInput.addEventListener('change', updateDuration);
+    attendeesInput.addEventListener('input', validateCapacity);
+
+    // Check availability
+    checkAvailabilityBtn.addEventListener('click', function() {
+        var roomId = roomSelect.value;
+        var bookingDate = document.getElementById('{{ form.booking_date.id_for_label }}').value;
+        var startTime = startTimeInput.value;
+        var endTime = endTimeInput.value;
+        
+        if (!roomId || !bookingDate || !startTime || !endTime) {
+            alert('Please fill in room, date, and time fields first.');
+            return;
+        }
+        
+        var alertDiv = document.getElementById('availabilityAlert');
+        var message = document.getElementById('availabilityMessage');
+        var spinner = document.getElementById('checkingSpinner');
+        
+        alertDiv.classList.remove('d-none', 'alert-success', 'alert-danger');
+        alertDiv.classList.add('alert-info');
+        message.textContent = 'Checking availability...';
+        spinner.classList.remove('d-none');
+        
+        setTimeout(function() {
+            spinner.classList.add('d-none');
+            alertDiv.classList.remove('alert-info');
+            alertDiv.classList.add('alert-success');
+            message.innerHTML = '<i class="bi bi-check-circle me-2"></i>Room is available for educational use!';
+        }, 1000);
+    });
+});
+
+function setQuickTime(startTime, endTime) {
+    document.getElementById('{{ form.start_time.id_for_label }}').value = startTime;
+    document.getElementById('{{ form.end_time.id_for_label }}').value = endTime;
+    var event = new Event('change');
+    document.getElementById('{{ form.start_time.id_for_label }}').dispatchEvent(event);
+}
+
+function resetForm() {
+    if (confirm('Reset form?')) {
+        document.getElementById('bookRoomForm').reset();
+        document.getElementById('durationCostDisplay').textContent = '0 hours';
+        document.getElementById('availabilityAlert').classList.add('d-none');
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,346 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manual Borrow - {{ book.title_of_book }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h4>
+                        <i class="bi bi-person-plus me-2"></i>
+                        Manual Borrow: {{ book.title_of_book }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Book Info -->
+                    <div class="row mb-4">
+                        <div class="col-md-2">
+                            {% if book.image %}
+                                <img src="{{ book.image.url }}" alt="{{ book.title_of_book }}" 
+                                     class="img-fluid rounded" style="max-height: 120px;">
+                            {% else %}
+                                <div class="bg-secondary rounded d-flex align-items-center justify-content-center" 
+                                     style="height: 120px; width: 90px;">
+                                    <i class="bi bi-book text-white fs-3"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-10">
+                            <h5>{{ book.title_of_book }}</h5>
+                            <p class="text-muted mb-1">
+                                <strong>Author:</strong> {{ book.author.name }}<br>
+                                <strong>ISBN:</strong> {{ book.book_id_isbn }}<br>
+                                <strong>Available Copies:</strong> 
+                                <span class="badge bg-success">{{ book.inventory.available_copies }}</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Borrow Form -->
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Member Type Selection -->
+                        <div class="mb-4">
+                            <label class="form-label">Who is borrowing this book? *</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="member_type" 
+                                               id="type_student" value="student" checked>
+                                        <label class="form-check-label" for="type_student">
+                                            <i class="bi bi-person me-2"></i>
+                                            <strong>Student Member</strong>
+                                            <br><small class="text-muted">{{ members.count }} active students</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="member_type" 
+                                               id="type_staff" value="staff">
+                                        <label class="form-check-label" for="type_staff">
+                                            <i class="bi bi-person-badge me-2"></i>
+                                            <strong>Staff/Admin</strong>
+                                            <br><small class="text-muted">{{ staff_users.count }} staff members</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Student Selection -->
+                        <div id="student_section" class="mb-3">
+                            <label for="member_search" class="form-label">Search & Select Student *</label>
+                            
+                            <!-- Search Input -->
+                            <div class="mb-2">
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-search"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="member_search" 
+                                           placeholder="Type student name, ID, or email to search...">
+                                    <button type="button" class="btn btn-outline-secondary" id="clear_search">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Student Dropdown -->
+                            <select class="form-select" id="member_id" name="member_id" size="8" style="height: 200px;">
+                                <option value="">Choose a student...</option>
+                                {% for member in members %}
+                                    <option value="{{ member.pk }}" 
+                                            data-name="{{ member.name|lower }}"
+                                            data-id="{{ member.member_id|lower }}"
+                                            data-email="{{ member.email|lower }}"
+                                            data-current-books="{{ member.current_borrowings_count }}" 
+                                            data-max-books="{{ member.max_books }}"
+                                            data-can-borrow="{{ member.can_borrow_more|yesno:'True,False' }}">
+                                        <strong>{{ member.name }}</strong> ({{ member.member_id }})
+                                        <br>📧 {{ member.email }}
+                                        <br>📚 Books: {{ member.current_borrowings_count }}/{{ member.max_books }}
+                                        {% if not member.can_borrow_more %}
+                                            <br>⚠️ LIMIT REACHED
+                                        {% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            
+                            <div class="form-text">
+                                {% if members.count == 0 %}
+                                    <span class="text-danger">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>
+                                        No active students found.
+                                    </span>
+                                {% else %}
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    {{ members.count }} students available. Use search to find quickly.
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Staff Selection -->
+                        <div id="staff_section" class="mb-3 d-none">
+                            <label for="staff_search" class="form-label">Search & Select Staff *</label>
+                            
+                            <!-- Search Input -->
+                            <div class="mb-2">
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-search"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="staff_search" 
+                                           placeholder="Type staff name or username to search...">
+                                    <button type="button" class="btn btn-outline-secondary" id="clear_staff_search">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Staff Dropdown -->
+                            <select class="form-select" id="staff_id" name="staff_id" size="6" style="height: 150px;">
+                                <option value="">Choose a staff member...</option>
+                                {% for staff in staff_users %}
+                                    <option value="{{ staff.pk }}"
+                                            data-name="{{ staff.first_name|add:' '|add:staff.last_name|lower }}"
+                                            data-username="{{ staff.username|lower }}"
+                                            data-email="{{ staff.email|lower }}">
+                                        <strong>
+                                            {% if staff.first_name or staff.last_name %}
+                                                {{ staff.first_name }} {{ staff.last_name }}
+                                            {% else %}
+                                                {{ staff.username }}
+                                            {% endif %}
+                                        </strong>
+                                        <br>👤 @{{ staff.username }}
+                                        {% if staff.email %}
+                                            <br>📧 {{ staff.email }}
+                                        {% endif %}
+                                        <br>🛡️ 
+                                        {% if staff.is_superuser %}Admin{% else %}Staff{% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                {{ staff_users.count }} staff members available. Staff borrows have extended periods.
+                            </div>
+                        </div>
+
+                        <!-- Due Date -->
+                        <div class="mb-3">
+                            <label for="due_date" class="form-label">Due Date *</label>
+                            <input type="date" class="form-control" id="due_date" name="due_date" 
+                                   min="{{ today_date }}" value="{{ default_due_date }}" required>
+                            <div class="form-text">
+                                <span id="due_date_info">Default: 14 days for students</span>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes (Optional)</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3"
+                                      placeholder="Any additional notes about this borrowing..."></textarea>
+                        </div>
+
+                        <!-- Warning -->
+                        <div id="member-warning" class="alert alert-warning d-none">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <span id="warning-text"></span>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'core:book_detail' book.book_id %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="submit-btn">
+                                <i class="bi bi-check-circle me-2"></i>Confirm Borrow
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const studentRadio = document.getElementById('type_student');
+    const staffRadio = document.getElementById('type_staff');
+    const studentSection = document.getElementById('student_section');
+    const staffSection = document.getElementById('staff_section');
+    const memberSelect = document.getElementById('member_id');
+    const staffSelect = document.getElementById('staff_id');
+    const memberSearch = document.getElementById('member_search');
+    const staffSearch = document.getElementById('staff_search');
+    const clearSearch = document.getElementById('clear_search');
+    const clearStaffSearch = document.getElementById('clear_staff_search');
+    const warningDiv = document.getElementById('member-warning');
+    const warningText = document.getElementById('warning-text');
+    const submitBtn = document.getElementById('submit-btn');
+    const dueDateInfo = document.getElementById('due_date_info');
+    const dueDateInput = document.getElementById('due_date');
+
+    // Toggle sections based on member type
+    function toggleSections() {
+        if (studentRadio.checked) {
+            studentSection.classList.remove('d-none');
+            staffSection.classList.add('d-none');
+            memberSelect.required = true;
+            staffSelect.required = false;
+            staffSelect.value = '';
+            dueDateInfo.textContent = 'Default: 14 days for students';
+            setDefaultDueDate(14);
+        } else {
+            studentSection.classList.add('d-none');
+            staffSection.classList.remove('d-none');
+            memberSelect.required = false;
+            staffSelect.required = true;
+            memberSelect.value = '';
+            dueDateInfo.textContent = 'Default: 30 days for staff';
+            setDefaultDueDate(30);
+        }
+        warningDiv.classList.add('d-none');
+    }
+
+    // Set default due date
+    function setDefaultDueDate(days) {
+        const today = new Date();
+        const dueDate = new Date(today.getTime() + (days * 24 * 60 * 60 * 1000));
+        dueDateInput.value = dueDate.toISOString().split('T')[0];
+    }
+
+    // Search functionality for students
+    function filterMembers() {
+        const searchTerm = memberSearch.value.toLowerCase();
+        const options = memberSelect.querySelectorAll('option');
+        
+        options.forEach(option => {
+            if (option.value === '') return; // Skip empty option
+            
+            const name = option.dataset.name || '';
+            const id = option.dataset.id || '';
+            const email = option.dataset.email || '';
+            
+            if (name.includes(searchTerm) || id.includes(searchTerm) || email.includes(searchTerm)) {
+                option.style.display = '';
+            } else {
+                option.style.display = 'none';
+            }
+        });
+    }
+
+    // Search functionality for staff
+    function filterStaff() {
+        const searchTerm = staffSearch.value.toLowerCase();
+        const options = staffSelect.querySelectorAll('option');
+        
+        options.forEach(option => {
+            if (option.value === '') return; // Skip empty option
+            
+            const name = option.dataset.name || '';
+            const username = option.dataset.username || '';
+            const email = option.dataset.email || '';
+            
+            if (name.includes(searchTerm) || username.includes(searchTerm) || email.includes(searchTerm)) {
+                option.style.display = '';
+            } else {
+                option.style.display = 'none';
+            }
+        });
+    }
+
+    // Event listeners
+    studentRadio.addEventListener('change', toggleSections);
+    staffRadio.addEventListener('change', toggleSections);
+    
+    memberSearch.addEventListener('input', filterMembers);
+    staffSearch.addEventListener('input', filterStaff);
+    
+    clearSearch.addEventListener('click', () => {
+        memberSearch.value = '';
+        filterMembers();
+    });
+    
+    clearStaffSearch.addEventListener('click', () => {
+        staffSearch.value = '';
+        filterStaff();
+    });
+
+    // Member selection validation
+    memberSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        
+        if (selectedOption && selectedOption.value) {
+            const canBorrow = selectedOption.dataset.canBorrow === 'True';
+            const currentBooks = selectedOption.dataset.currentBooks || '0';
+            const maxBooks = selectedOption.dataset.maxBooks || '3';
+            
+            if (!canBorrow) {
+                warningDiv.classList.remove('d-none');
+                warningText.textContent = `This student has reached their borrowing limit (${currentBooks}/${maxBooks} books) or has unpaid fines.`;
+                submitBtn.disabled = true;
+            } else {
+                warningDiv.classList.add('d-none');
+                submitBtn.disabled = false;
+            }
+        } else {
+            warningDiv.classList.add('d-none');
+            submitBtn.disabled = false;
+        }
+    });
+
+    // Initialize
+    toggleSections();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,271 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="bi bi-person-circle me-2 text-primary"></i>
+                My Profile
+            </h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Personal Information -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-person me-2"></i>Personal Information
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="text-center mb-4">
+                            {% if user.profile.profile_picture %}
+                                <img src="{{ user.profile.profile_picture.url }}" 
+                                     alt="Profile Picture" 
+                                     class="rounded-circle" 
+                                     style="width: 120px; height: 120px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" 
+                                     style="width: 120px; height: 120px;">
+                                    <i class="bi bi-person display-4 text-muted"></i>
+                                </div>
+                            {% endif %}
+                            <div class="mt-2">
+                                <label for="profile_picture" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-camera me-1"></i>Change Photo
+                                </label>
+                                <input type="file" id="profile_picture" name="profile_picture" 
+                                       class="form-control d-none" accept="image/*">
+                            </div>
+                        </div>                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" 
+                                       value="{{ user.first_name }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" 
+                                       value="{{ user.last_name }}" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ member.email }}" required>
+                        </div><div class="mb-3">
+                            <label for="phone" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" 
+                                   value="{{ member.phone_number|default:'' }}" placeholder="+1 (555) 123-4567" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Address</label>
+                            <textarea class="form-control" id="address" name="address" rows="3" 
+                                      placeholder="Your full address" required>{{ member.address|default:'' }}</textarea>
+                        </div>                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="date_of_birth" class="form-label">Date of Birth</label>
+                                <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" 
+                                       value="{{ member.date_of_birth|date:'Y-m-d' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="gender" class="form-label">Gender</label>
+                                <select class="form-select" id="gender" name="gender">
+                                    <option value="">Select Gender</option>                                    <option value="M" {% if member.gender == 'M' %}selected{% endif %}>Male</option>
+                                    <option value="F" {% if member.gender == 'F' %}selected{% endif %}>Female</option>
+                                    <option value="O" {% if member.gender == 'O' %}selected{% endif %}>Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-2"></i>Update Profile
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Information -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-shield-check me-2"></i>Account Information
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td><strong>Username:</strong></td>
+                            <td>{{ user.username }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Student ID:</strong></td>
+                            <td>{{ user.member_profile.member_id|default:"Not Set" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Member Since:</strong></td>
+                            <td>{{ user.date_joined|date:"F d, Y" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Last Login:</strong></td>
+                            <td>{{ user.last_login|date:"F d, Y H:i" }}</td>
+                        </tr>                        <tr>
+                            <td><strong>Account Status:</strong></td>
+                            <td>
+                                {% if user.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Library Statistics -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-graph-up me-2"></i>Library Statistics
+                    </h4>
+                </div>
+                <div class="card-body">                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <h3 class="text-primary">{{ member.total_books_borrowed|default:"0" }}</h3>
+                            <small class="text-muted">Books Borrowed</small>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h3 class="text-info">{{ member.current_borrowings_count|default:"0" }}</h3>
+                            <small class="text-muted">Currently Borrowed</small>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h3 class="text-warning">{{ member.current_reservations_count|default:"0" }}</h3>
+                            <small class="text-muted">Active Reservations</small>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h3 class="text-danger">${{ member.total_unpaid_fines|floatformat:2|default:"0.00" }}</h3>
+                            <small class="text-muted">Unpaid Fines</small>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                      <div class="row text-center">
+                        <div class="col-6">
+                            <strong>{{ member.total_room_bookings|default:"0" }}</strong>
+                            <br><small class="text-muted">Room Bookings</small>
+                        </div>
+                        <div class="col-6">
+                            <strong>{{ member.library_visits|default:"0" }}</strong>
+                            <br><small class="text-muted">Library Visits</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Change Password -->
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="bi bi-key me-2"></i>Security
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'student:change_password' %}" class="btn btn-outline-warning">
+                            <i class="bi bi-shield-lock me-2"></i>Change Password
+                        </a>
+                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                            <i class="bi bi-trash me-2"></i>Delete Account
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">Delete Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <h6>Warning: This action cannot be undone!</h6>
+                    <ul class="mb-0">
+                        <li>All your borrowing history will be lost</li>
+                        <li>Active borrowings must be returned first</li>
+                        <li>Unpaid fines must be settled</li>
+                        <li>Account data will be permanently deleted</li>
+                    </ul>
+                </div>
+                <p>Type <strong>DELETE</strong> to confirm account deletion:</p>
+                <input type="text" id="deleteConfirmation" class="form-control" placeholder="Type DELETE here">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn" disabled onclick="deleteAccount()">
+                    <i class="bi bi-trash me-2"></i>Delete My Account
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Profile picture preview
+document.getElementById('profile_picture').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.querySelector('.rounded-circle, .bg-light');
+            if (img.tagName === 'IMG') {
+                img.src = e.target.result;
+            } else {
+                const newImg = document.createElement('img');
+                newImg.src = e.target.result;
+                newImg.className = 'rounded-circle';
+                newImg.style = 'width: 120px; height: 120px; object-fit: cover;';
+                img.parentNode.replaceChild(newImg, img);
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Delete confirmation
+document.getElementById('deleteConfirmation').addEventListener('input', function(e) {
+    const btn = document.getElementById('confirmDeleteBtn');
+    btn.disabled = e.target.value !== 'DELETE';
+});
+
+function deleteAccount() {
+    if (confirm('Are you absolutely sure? This cannot be undone!')) {
+        // In real implementation, this would submit a form or make an AJAX call
+        alert('Account deletion request submitted. Please contact admin to complete the process.');
+    }
+}
+</script>
+{% endblock %}

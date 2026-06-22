@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Room - {{ room.room_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'room_management:room_list' %}">Rooms</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'room_management:room_detail' room.room_id %}">{{ room.room_name }}</a></li>
+                            <li class="breadcrumb-item active">Delete</li>
+                        </ol>
+                    </nav>
+                    <h1>
+                        <i class="bi bi-trash me-2 text-danger"></i>
+                        Delete Room
+                    </h1>
+                    <p class="text-muted">Permanently remove this room from the system</p>
+                </div>
+                <div>
+                    <a href="{% url 'room_management:room_detail' room.room_id %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Room
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Warning Alert -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-danger" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+                    <div>
+                        <h5 class="alert-heading mb-1">Warning: This action cannot be undone!</h5>
+                        <p class="mb-0">Deleting this room will permanently remove all associated data including bookings, equipment, and maintenance records.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Room Information and Confirmation -->
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Room Details -->
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Room to be Deleted
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted fw-medium">Room Name:</td>
+                                    <td class="fw-bold">{{ room.room_name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium">Room Number:</td>
+                                    <td>{{ room.room_number }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium">Type:</td>
+                                    <td>{{ room.get_room_type_display }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium">Capacity:</td>
+                                    <td>{{ room.capacity }} people</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium">Location:</td>
+                                    <td>{{ room.location }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted fw-medium">Status:</td>
+                                    <td>
+                                        {% if room.status == 'available' %}
+                                            <span class="badge bg-success">Available</span>
+                                        {% elif room.status == 'occupied' %}
+                                            <span class="badge bg-warning">Occupied</span>
+                                        {% elif room.status == 'maintenance' %}
+                                            <span class="badge bg-danger">Maintenance</span>
+                                        {% else %}
+                                            <span class="badge bg-info">{{ room.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium">Hourly Rate:</td>
+                                    <td>${{ room.hourly_rate|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium">Active:</td>
+                                    <td>
+                                        {% if room.is_active %}
+                                            <span class="text-success">Yes</span>
+                                        {% else %}
+                                            <span class="text-danger">No</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium">Created:</td>
+                                    <td>{{ room.created_at|date:"M d, Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium">Last Updated:</td>
+                                    <td>{{ room.updated_at|date:"M d, Y" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    {% if room.facilities %}
+                        <div class="mt-3">
+                            <h6 class="text-muted">Facilities:</h6>
+                            <p class="mb-0">{{ room.facilities }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Confirmation Form -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-shield-exclamation me-2"></i>
+                        Confirmation Required
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="deleteRoomForm">
+                        {% csrf_token %}
+                        
+                        <!-- Confirmation Checkbox -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="confirmDelete" name="confirm_delete" required>
+                                <label class="form-check-label fw-medium" for="confirmDelete">
+                                    I understand that this action will permanently delete the room and all associated data
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Type Room Name for Confirmation -->
+                        <div class="mb-4">
+                            <label for="roomNameConfirmation" class="form-label fw-medium">
+                                Type the room name "<span class="text-danger">{{ room.room_name }}</span>" to confirm deletion:
+                            </label>
+                            <input type="text" class="form-control" id="roomNameConfirmation" name="room_name_confirmation" 
+                                   placeholder="Enter room name exactly as shown" required>
+                            <div class="form-text">This helps prevent accidental deletions</div>
+                        </div>
+
+                        <!-- Reason for Deletion -->
+                        <div class="mb-4">
+                            <label for="deletionReason" class="form-label">Reason for Deletion (Optional)</label>
+                            <textarea class="form-control" id="deletionReason" name="deletion_reason" rows="3" 
+                                      placeholder="Why is this room being deleted?"></textarea>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'room_management:room_detail' room.room_id %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger" id="deleteButton" disabled>
+                                <i class="bi bi-trash me-2"></i>Delete Room Permanently
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Impact Warning -->
+            <div class="card mb-4 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Deletion Impact
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <strong>The following will be permanently deleted:</strong>
+                    </div>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-calendar-x text-danger me-2"></i>
+                            <strong>{{ room.admin_bookings.count }}</strong> booking records
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-gear text-danger me-2"></i>
+                            <strong>{{ room.equipment.count }}</strong> equipment items
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-wrench text-danger me-2"></i>
+                            <strong>{{ room.maintenance_records.count }}</strong> maintenance records
+                        </li>
+                        <li class="mb-0">
+                            <i class="bi bi-building text-danger me-2"></i>
+                            Room configuration and history
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Alternative Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightbulb me-2"></i>
+                        Consider Alternatives
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted mb-3">Instead of deleting, you might want to:</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'room_management:update_room' room.room_id %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-pause-circle me-2"></i>Deactivate Room
+                        </a>
+                        <a href="{% url 'room_management:update_room' room.room_id %}" class="btn btn-outline-warning btn-sm">
+                            <i class="bi bi-wrench me-2"></i>Set to Maintenance
+                        </a>
+                        <a href="{% url 'room_management:update_room' room.room_id %}" class="btn btn-outline-info btn-sm">
+                            <i class="bi bi-pencil me-2"></i>Edit Room Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            {% if room.admin_bookings.all %}
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="bi bi-clock-history me-2"></i>
+                            Recent Activity
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="small">
+                            {% for booking in room.admin_bookings.all|slice:":3" %}
+                                <div class="mb-2">
+                                    <div class="fw-medium">{{ booking.purpose|truncatechars:25 }}</div>
+                                    <div class="text-muted">{{ booking.booking_date|date:"M d" }} - {{ booking.booked_by.username }}</div>
+                                </div>
+                            {% endfor %}
+                            {% if room.admin_bookings.count > 3 %}
+                                <div class="text-muted">...and {{ room.admin_bookings.count|add:"-3" }} more</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('deleteRoomForm');
+    var confirmCheckbox = document.getElementById('confirmDelete');
+    var roomNameInput = document.getElementById('roomNameConfirmation');
+    var deleteButton = document.getElementById('deleteButton');
+    var expectedRoomName = "{{ room.room_name }}";
+    
+    function validateForm() {
+        var isChecked = confirmCheckbox.checked;
+        var nameMatches = roomNameInput.value.trim() === expectedRoomName;
+        
+        deleteButton.disabled = !(isChecked && nameMatches);
+        
+        if (nameMatches) {
+            roomNameInput.classList.remove('is-invalid');
+            roomNameInput.classList.add('is-valid');
+        } else if (roomNameInput.value.length > 0) {
+            roomNameInput.classList.remove('is-valid');
+            roomNameInput.classList.add('is-invalid');
+        } else {
+            roomNameInput.classList.remove('is-valid', 'is-invalid');
+        }
+    }
+    
+    confirmCheckbox.addEventListener('change', validateForm);
+    roomNameInput.addEventListener('input', validateForm);
+    
+    form.addEventListener('submit', function(e) {
+        if (!confirmCheckbox.checked) {
+            e.preventDefault();
+            alert('Please confirm that you understand the consequences of deletion.');
+            return false;
+        }
+        
+        if (roomNameInput.value.trim() !== expectedRoomName) {
+            e.preventDefault();
+            alert('Room name confirmation does not match. Please type the exact room name.');
+            roomNameInput.focus();
+            return false;
+        }
+        
+        if (!confirm('This is your final warning. Are you absolutely sure you want to delete this room? This action cannot be undone.')) {
+            e.preventDefault();
+            return false;
+        }
+    });
+    
+    // Prevent accidental form submission
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

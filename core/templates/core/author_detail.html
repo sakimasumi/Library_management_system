@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ author.name }} - Author Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-person me-2 text-primary"></i>
+                    Author Details
+                </h1>
+                <div>
+                    <a href="{% url 'core:manage_authors' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Authors
+                    </a>
+                    <a href="{% url 'core:update_author' author.id %}" class="btn btn-warning">
+                        <i class="bi bi-pencil me-2"></i>Edit Author
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Author Information -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% if author.photo %}
+                        <img src="{{ author.photo.url }}" alt="{{ author.name }}" 
+                             class="img-fluid rounded-circle mb-3" style="width: 200px; height: 200px; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-light rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" 
+                             style="width: 200px; height: 200px;">
+                            <i class="bi bi-person display-1 text-muted"></i>
+                        </div>
+                    {% endif %}
+                    <h3>{{ author.name }}</h3>
+                    {% if author.nationality %}
+                        <p class="text-muted">{{ author.nationality }}</p>
+                    {% endif %}
+                    {% if author.birth_date %}
+                        <p>
+                            <strong>Born:</strong> {{ author.birth_date|date:"M d, Y" }}
+                            {% if author.death_date %}
+                                <br><strong>Died:</strong> {{ author.death_date|date:"M d, Y" }}
+                            {% endif %}
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <!-- Biography -->
+            {% if author.biography %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Biography</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>{{ author.biography|linebreaks }}</p>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Books by Author -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Books by {{ author.name }} ({{ books.count }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if books %}
+                        <div class="row g-3">
+                            {% for book in books %}
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="row g-0">
+                                        <div class="col-4">
+                                            {% if book.image %}
+                                                <img src="{{ book.image.url }}" class="img-fluid rounded-start h-100" 
+                                                     style="object-fit: cover;">
+                                            {% else %}
+                                                <div class="bg-light h-100 d-flex align-items-center justify-content-center">
+                                                    <i class="bi bi-book text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-8">
+                                            <div class="card-body p-2">
+                                                <h6 class="card-title mb-1">{{ book.title_of_book|truncatechars:30 }}</h6>
+                                                <small class="text-muted">{{ book.category.name }}</small><br>
+                                                {% if book.publication_date %}
+                                                    <small class="text-muted">{{ book.publication_date.year }}</small><br>
+                                                {% endif %}
+                                                <a href="{% url 'core:book_detail' book.book_id %}" 
+                                                   class="btn btn-primary btn-sm mt-1">View</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No books found for this author.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

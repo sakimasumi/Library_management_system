@@ -1,0 +1,288 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Recycle Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-recycle me-2 text-warning"></i>
+                    Recycle Record Details
+                </h1>
+                <div>
+                    <a href="{% url 'core:manage_recycle' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Recycle List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Details -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recycle Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Book Details</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Title:</strong></td>
+                                    <td>
+                                        {% if recycle.book %}
+                                            {{ recycle.book.title_of_book }}
+                                        {% else %}
+                                            {{ recycle.title|default:"Unknown Title" }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Author:</strong></td>
+                                    <td>
+                                        {% if recycle.book %}
+                                            {{ recycle.book.author.name }}
+                                        {% else %}
+                                            Unknown
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>ISBN:</strong></td>
+                                    <td>{{ recycle.book_id_isbn }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Quantity:</strong></td>
+                                    <td><span class="badge bg-info">{{ recycle.quantity }}</span></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Recycle Details</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Reason:</strong></td>
+                                    <td><span class="badge bg-secondary">{{ recycle.get_reason_display }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td>
+                                        {% if recycle.status == 'pending' %}
+                                            <span class="badge bg-warning">{{ recycle.get_status_display }}</span>
+                                        {% elif recycle.status == 'disposed' %}
+                                            <span class="badge bg-success">{{ recycle.get_status_display }}</span>
+                                        {% elif recycle.status == 'cancelled' %}
+                                            <span class="badge bg-secondary">{{ recycle.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Recycled Date:</strong></td>
+                                    <td>{{ recycle.date|date:"F d, Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Recycled By:</strong></td>
+                                    <td>{{ recycle.recycled_by.username }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    {% if recycle.description %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6>Description</h6>
+                            <p class="text-muted">{{ recycle.description }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Disposal Information -->
+            {% if recycle.status == 'disposed' %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Disposal Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Disposal Date:</strong></td>
+                                    <td>{{ recycle.disposal_date|date:"F d, Y"|default:"Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Disposal Method:</strong></td>
+                                    <td>{{ recycle.disposal_method|default:"Not specified" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    {% if recycle.disposal_notes %}
+                    <div class="row">
+                        <div class="col-12">
+                            <h6>Disposal Notes</h6>
+                            <p class="text-muted">{{ recycle.disposal_notes }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Financial Information -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Financial Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td><strong>Estimated Value:</strong></td>
+                            <td class="text-success">${{ recycle.estimated_value|default:0|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Recycling Cost:</strong></td>
+                            <td class="text-danger">${{ recycle.recycling_cost|default:0|floatformat:2 }}</td>
+                        </tr>
+                        <tr class="border-top">
+                            <td><strong>Net Cost:</strong></td>
+                            <td class="fw-bold">${{ recycle.total_cost|floatformat:2 }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if can_mark_disposed %}
+                        <a href="{% url 'core:mark_disposed' recycle.id %}" class="btn btn-success">
+                            <i class="bi bi-check-circle me-2"></i>Mark as Disposed
+                        </a>
+                        {% endif %}
+                        
+                        {% if can_cancel %}
+                        <a href="{% url 'core:cancel_recycle' recycle.id %}" class="btn btn-warning">
+                            <i class="bi bi-x-circle me-2"></i>Cancel Recycle
+                        </a>
+                        {% endif %}
+                        
+                        <a href="{% url 'core:update_recycle' recycle.id %}" class="btn btn-outline-primary">
+                            <i class="bi bi-pencil me-2"></i>Edit Details
+                        </a>
+                        
+                        <a href="{% url 'core:delete_recycle' recycle.id %}" class="btn btn-outline-danger">
+                            <i class="bi bi-trash me-2"></i>Delete Record
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Timeline -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Status Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">                        <div class="timeline-item">
+                            <div class="timeline-marker bg-warning"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Created</h6>
+                                <small class="text-muted">{{ recycle.date|date:"F d, Y" }}</small>
+                                <p class="mb-0">by {{ recycle.recycled_by.username }}</p>
+                            </div>
+                        </div>
+                        
+                        {% if recycle.status == 'disposed' %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Disposed</h6>
+                                <small class="text-muted">{{ recycle.disposal_date|date:"F d, Y"|default:"Unknown date" }}</small>
+                                {% if recycle.disposal_method %}
+                                <p class="mb-0">{{ recycle.disposal_method }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% elif recycle.status == 'cancelled' %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-secondary"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Cancelled</h6>
+                                <small class="text-muted">Status changed to cancelled</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {% if recycle.is_overdue_disposal %}
+            <!-- Overdue Warning -->
+            <div class="card mt-4 border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Overdue for Disposal
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">This item has been pending disposal for more than 30 days. Consider taking action soon.</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 20px;
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+}
+
+.timeline-item:not(:last-child):before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 20px;
+    height: 100%;
+    width: 2px;
+    background-color: #dee2e6;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -16px;
+    top: 4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.timeline-content {
+    margin-left: 10px;
+}
+</style>
+{% endblock %}

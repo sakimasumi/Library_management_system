@@ -1,0 +1,341 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Update Recycle Record - Library System{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+    .update-card {
+        border: none;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        border-radius: 15px;
+    }
+    .card-header {
+        background: linear-gradient(135deg, #17a2b8, #138496);
+        color: white;
+        border-radius: 15px 15px 0 0 !important;
+        border: none;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #17a2b8;
+        box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25);
+    }
+    .btn-update {
+        background: linear-gradient(135deg, #17a2b8, #138496);
+        border: none;
+        border-radius: 25px;
+        padding: 10px 30px;
+        transition: all 0.3s ease;
+    }
+    .btn-update:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(23, 162, 184, 0.3);
+    }
+    .info-card {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 10px;
+        border: 2px solid #e9ecef;
+    }
+    .section-header {
+        border-bottom: 2px solid #17a2b8;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    .field-group {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <h2><i class="fas fa-edit text-info"></i> Update Recycle Record</h2>
+                <p class="text-muted">Modify recycling information and details</p>
+            </div>
+
+            <!-- Current Item Information -->
+            <div class="card info-card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-book text-primary"></i> Current Item Information</h5>
+                    <div class="row">                        <div class="col-md-4">
+                            <p><strong>Title:</strong> 
+                                {% if recycle.book %}
+                                    {{ recycle.book.title_of_book }}
+                                {% else %}
+                                    {{ recycle.title|default:"Unknown Title" }}
+                                {% endif %}
+                            </p>
+                            <p><strong>Author:</strong> 
+                                {% if recycle.book %}
+                                    {{ recycle.book.author.name }}
+                                {% else %}
+                                    Unknown Author
+                                {% endif %}
+                            </p>
+                        </div>                        <div class="col-md-4">
+                            <p><strong>ISBN:</strong> {{ recycle.book_id_isbn }}</p>
+                            <p><strong>Publisher:</strong> 
+                                {% if recycle.book %}
+                                    {{ recycle.book.publisher.name }}
+                                {% else %}
+                                    Unknown Publisher
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>Current Status:</strong> 
+                                <span class="badge {% if recycle.status == 'disposed' %}bg-success{% else %}bg-warning{% endif %}">
+                                    {{ recycle.get_status_display }}
+                                </span>
+                            </p>
+                            <p><strong>Recycled Date:</strong> {{ recycle.date|date:"M d, Y" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Update Form -->
+            <div class="card update-card">
+                <div class="card-header text-center">
+                    <h4><i class="fas fa-clipboard-list"></i> Update Information</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <!-- Basic Information Section -->
+                        <div class="section-header">
+                            <h5><i class="fas fa-info-circle text-info"></i> Basic Information</h5>
+                        </div>
+
+                        <div class="field-group">
+                            <div class="row">
+                                <!-- Reason -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.reason.id_for_label }}" class="form-label">
+                                        <i class="fas fa-question-circle"></i> Recycling Reason <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.reason }}
+                                    {% if form.reason.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.reason.errors %}
+                                                <small>{{ error }}</small><br>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Estimated Value -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.estimated_value.id_for_label }}" class="form-label">
+                                        <i class="fas fa-dollar-sign"></i> Estimated Value
+                                    </label>
+                                    {{ form.estimated_value }}
+                                    <div class="form-text">Estimated monetary value of the item</div>
+                                    {% if form.estimated_value.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.estimated_value.errors %}
+                                                <small>{{ error }}</small><br>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Notes -->
+                            <div class="mb-3">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">
+                                    <i class="fas fa-sticky-note"></i> Additional Notes
+                                </label>
+                                {{ form.notes }}
+                                <div class="form-text">Any additional information about the recycling</div>
+                                {% if form.notes.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.notes.errors %}
+                                            <small>{{ error }}</small><br>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Disposal Information Section (only if item has disposal info) -->
+                        {% if recycle.disposal_date or recycle.disposal_method %}
+                        <div class="section-header">
+                            <h5><i class="fas fa-trash-alt text-danger"></i> Disposal Information</h5>
+                        </div>
+
+                        <div class="field-group">
+                            <div class="row">
+                                <!-- Disposal Method -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.disposal_method.id_for_label }}" class="form-label">
+                                        <i class="fas fa-cogs"></i> Disposal Method
+                                    </label>
+                                    {{ form.disposal_method }}
+                                    {% if form.disposal_method.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.disposal_method.errors %}
+                                                <small>{{ error }}</small><br>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Recycling Cost -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.recycling_cost.id_for_label }}" class="form-label">
+                                        <i class="fas fa-dollar-sign"></i> Recycling Cost
+                                    </label>
+                                    {{ form.recycling_cost }}
+                                    <div class="form-text">Cost associated with disposal</div>
+                                    {% if form.recycling_cost.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.recycling_cost.errors %}
+                                                <small>{{ error }}</small><br>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Disposal Date -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.disposal_date.id_for_label }}" class="form-label">
+                                        <i class="fas fa-calendar"></i> Disposal Date
+                                    </label>
+                                    {{ form.disposal_date }}
+                                    {% if form.disposal_date.errors %}
+                                        <div class="text-danger mt-1">
+                                            {% for error in form.disposal_date.errors %}
+                                                <small>{{ error }}</small><br>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Disposal Notes -->
+                            <div class="mb-3">
+                                <label for="{{ form.disposal_notes.id_for_label }}" class="form-label">
+                                    <i class="fas fa-sticky-note"></i> Disposal Notes
+                                </label>
+                                {{ form.disposal_notes }}
+                                <div class="form-text">Notes about the disposal process</div>
+                                {% if form.disposal_notes.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.disposal_notes.errors %}
+                                            <small>{{ error }}</small><br>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Financial Summary (if applicable) -->
+                        {% if recycle.estimated_value or recycle.recycling_cost %}
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-calculator"></i> Financial Summary</h6>
+                            <div class="row">
+                                {% if recycle.estimated_value %}
+                                <div class="col-md-4">
+                                    <strong>Current Estimated Value:</strong> ${{ recycle.estimated_value }}
+                                </div>
+                                {% endif %}
+                                {% if recycle.recycling_cost %}
+                                <div class="col-md-4">
+                                    <strong>Current Recycling Cost:</strong> ${{ recycle.recycling_cost }}
+                                </div>
+                                {% endif %}
+                                {% if recycle.total_cost %}
+                                <div class="col-md-4">
+                                    <strong>Current Total Cost:</strong> ${{ recycle.total_cost }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                            <button type="submit" class="btn btn-info btn-update">
+                                <i class="fas fa-save"></i> Update Record
+                            </button>
+                            <a href="{% url 'core:recycle_detail' recycle.id %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Update History (if needed) -->
+            <div class="alert alert-light mt-4">
+                <h6><i class="fas fa-history"></i> Update Information</h6>                <p class="mb-0">
+                    <strong>Last Updated:</strong> {{ recycle.date|date:"M d, Y" }} by 
+                    {{ recycle.recycled_by.get_full_name|default:recycle.recycled_by.username }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const reason = document.querySelector('#id_reason').value;
+        
+        if (!reason.trim()) {
+            e.preventDefault();
+            alert('Please provide a reason for recycling.');
+            return false;
+        }
+
+        // Confirm update
+        if (!confirm('Are you sure you want to update this recycle record?')) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    // Calculate total cost dynamically
+    const estimatedValueInput = document.querySelector('#id_estimated_value');
+    const recyclingCostInput = document.querySelector('#id_recycling_cost');
+    
+    function updateTotalCost() {
+        const estimatedValue = parseFloat(estimatedValueInput.value) || 0;
+        const recyclingCost = parseFloat(recyclingCostInput.value) || 0;
+        const total = estimatedValue + recyclingCost;
+        
+        // Update display if total cost element exists
+        const totalCostDisplay = document.querySelector('#total-cost-display');
+        if (totalCostDisplay) {
+            totalCostDisplay.textContent = '$' + total.toFixed(2);
+        }
+    }
+
+    if (estimatedValueInput) {
+        estimatedValueInput.addEventListener('input', updateTotalCost);
+    }
+    if (recyclingCostInput) {
+        recyclingCostInput.addEventListener('input', updateTotalCost);
+    }
+});
+</script>
+{% endblock %}

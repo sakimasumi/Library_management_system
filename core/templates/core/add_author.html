@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Author{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-person-plus me-2 text-success"></i>
+                    Add New Author
+                </h1>
+                <div>
+                    <a href="{% url 'core:manage_authors' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Authors
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Author Form -->
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Author Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="id_name" class="form-label">Author Name *</label>
+                                    {{ form.name }}
+                                    {% if form.name.errors %}
+                                        <div class="text-danger small">{{ form.name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="id_nationality" class="form-label">Nationality</label>
+                                    {{ form.nationality }}
+                                    {% if form.nationality.errors %}
+                                        <div class="text-danger small">{{ form.nationality.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_birth_date" class="form-label">Birth Date</label>
+                                    {{ form.birth_date }}
+                                    {% if form.birth_date.errors %}
+                                        <div class="text-danger small">{{ form.birth_date.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_death_date" class="form-label">Death Date (if applicable)</label>
+                                    {{ form.death_date }}
+                                    {% if form.death_date.errors %}
+                                        <div class="text-danger small">{{ form.death_date.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_biography" class="form-label">Biography</label>
+                            {{ form.biography }}
+                            {% if form.biography.errors %}
+                                <div class="text-danger small">{{ form.biography.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_photo" class="form-label">Author Photo</label>
+                            {{ form.photo }}
+                            <div class="form-text">Upload author's photo (optional). Max size: 2MB</div>
+                            {% if form.photo.errors %}
+                                <div class="text-danger small">{{ form.photo.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'core:manage_authors' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-2"></i>Add Author
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

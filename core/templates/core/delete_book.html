@@ -1,0 +1,396 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Book - {{ book.title_of_book }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-trash me-2 text-danger"></i>
+                    Delete Book
+                </h1>
+                <div>
+                    <a href="{% url 'core:book_detail' book.book_id %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Book
+                    </a>
+                    <a href="{% url 'core:book_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-list me-2"></i>All Books
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Warning Alert -->
+            <div class="alert alert-danger" role="alert">
+                <h4 class="alert-heading">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Danger Zone
+                </h4>
+                <p>You are about to permanently delete this book from the library system.</p>
+                <hr>
+                <p class="mb-0">
+                    <strong>This action cannot be undone!</strong> All related data including borrowing history, 
+                    reservations, and inventory records will also be removed.
+                </p>
+            </div>
+
+            <!-- Book Information Card -->
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Book to be Deleted</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Book Cover -->
+                        <div class="col-md-3 text-center">
+                            {% if book.image %}
+                                <img src="{{ book.image.url }}" alt="{{ book.title_of_book }}" 
+                                     class="img-fluid rounded shadow" style="max-height: 200px;">
+                            {% else %}
+                                <div class="bg-light d-flex align-items-center justify-content-center rounded" 
+                                     style="height: 200px;">
+                                    <i class="bi bi-book display-4 text-muted"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Book Details -->
+                        <div class="col-md-9">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Title:</strong></td>
+                                    <td>{{ book.title_of_book }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>ISBN:</strong></td>
+                                    <td>{{ book.book_id_isbn }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Author:</strong></td>
+                                    <td>{{ book.author.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Publisher:</strong></td>
+                                    <td>{{ book.publisher.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Category:</strong></td>
+                                    <td><span class="badge bg-secondary">{{ book.category.name }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Publication Date:</strong></td>
+                                    <td>{{ book.publication_date|date:"M d, Y"|default:"Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Current Status:</strong></td>
+                                    <td>
+                                        {% if book.is_available %}
+                                            <span class="badge bg-success">Available</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Currently Borrowed</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Added to Library:</strong></td>
+                                    <td>{{ book.created_at|date:"M d, Y H:i" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Impact Analysis -->
+            <div class="card mt-3">
+                <div class="card-header bg-warning">
+                    <h6 class="mb-0">Deletion Impact Analysis</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-danger">Data that will be lost:</h6>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Borrowing Records
+                                    <span class="badge bg-danger rounded-pill">{{ borrowing_count }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Active Reservations
+                                    <span class="badge bg-warning rounded-pill">{{ reservation_count }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Inventory Records
+                                    <span class="badge bg-info rounded-pill">{{ inventory_count }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Wishlist Entries
+                                    <span class="badge bg-secondary rounded-pill">{{ wishlist_count }}</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-info">Current Status:</h6>
+                            {% if not book.is_available %}
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    <strong>Warning:</strong> This book is currently borrowed. 
+                                    Deleting it will affect the active borrowing record.
+                                </div>
+                            {% endif %}
+                            
+                            {% if reservation_count > 0 %}
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    There are {{ reservation_count }} active reservation(s) for this book.
+                                </div>
+                            {% endif %}
+
+                            {% if borrowing_count > 0 %}
+                                <div class="alert alert-secondary">
+                                    <i class="bi bi-clock-history me-2"></i>
+                                    This book has a borrowing history of {{ borrowing_count }} record(s).
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alternative Actions -->
+            <div class="card mt-3">
+                <div class="card-header bg-info">
+                    <h6 class="mb-0">Alternative Actions</h6>
+                </div>
+                <div class="card-body">
+                    <p>Instead of deleting, you might want to consider:</p>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <a href="{% url 'core:update_book' book.book_id %}" class="btn btn-warning w-100">
+                                <i class="bi bi-pencil me-2"></i>Edit Book Information
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <button type="button" class="btn btn-secondary w-100" onclick="markAsRecycled()">
+                                <i class="bi bi-recycle me-2"></i>Move to Recycled
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <button type="button" class="btn btn-info w-100" onclick="markAsUnavailable()">
+                                <i class="bi bi-eye-slash me-2"></i>Mark as Unavailable
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{% url 'core:manage_inventory' %}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-boxes me-2"></i>Update Inventory Only
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete Confirmation Form -->
+            <div class="card mt-3 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0">Confirm Deletion</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="deleteForm">
+                        {% csrf_token %}
+                        
+                        <!-- Confirmation Checkbox -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="confirmDelete" required>
+                                <label class="form-check-label" for="confirmDelete">
+                                    I understand that this action cannot be undone and will permanently remove 
+                                    all data related to this book.
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Reason for Deletion -->
+                        <div class="mb-3">
+                            <label for="deletion_reason" class="form-label">Reason for Deletion *</label>
+                            <select class="form-select" id="deletion_reason" name="deletion_reason" required>
+                                <option value="">Select a reason...</option>
+                                <option value="damaged">Book is damaged beyond repair</option>
+                                <option value="duplicate">Duplicate entry</option>
+                                <option value="outdated">Content is outdated</option>
+                                <option value="lost">Book is permanently lost</option>
+                                <option value="policy">Library policy change</option>
+                                <option value="other">Other reason</option>
+                            </select>
+                        </div>
+
+                        <!-- Additional Notes -->
+                        <div class="mb-3">
+                            <label for="deletion_notes" class="form-label">Additional Notes</label>
+                            <textarea class="form-control" id="deletion_notes" name="deletion_notes" rows="3" 
+                                      placeholder="Provide additional details about why this book is being deleted..."></textarea>
+                        </div>
+
+                        <!-- Final Confirmation -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="finalConfirm" required>
+                                <label class="form-check-label" for="finalConfirm">
+                                    <strong>Final confirmation:</strong> I want to permanently delete 
+                                    "{{ book.title_of_book }}" from the library system.
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'core:book_detail' book.book_id %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger" id="deleteButton" disabled>
+                                <i class="bi bi-trash me-2"></i>Delete Book Permanently
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recycle Modal -->
+<div class="modal fade" id="recycleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Move to Recycled Books</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="recycleForm">
+                    <div class="mb-3">
+                        <label for="recycle_reason" class="form-label">Reason for Recycling *</label>
+                        <select class="form-select" id="recycle_reason" name="reason" required>
+                            <option value="">Select a reason...</option>
+                            <option value="damaged">Damaged Beyond Repair</option>
+                            <option value="outdated">Outdated Content</option>
+                            <option value="worn">Excessive Wear</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="recycle_description" class="form-label">Description</label>
+                        <textarea class="form-control" id="recycle_description" name="description" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" onclick="processRecycle()">Move to Recycled</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Enable/disable delete button based on confirmations
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmDelete = document.getElementById('confirmDelete');
+    const finalConfirm = document.getElementById('finalConfirm');
+    const deleteButton = document.getElementById('deleteButton');
+    const deletionReason = document.getElementById('deletion_reason');
+
+    function checkFormValidity() {
+        if (confirmDelete.checked && finalConfirm.checked && deletionReason.value) {
+            deleteButton.disabled = false;
+            deleteButton.classList.remove('btn-secondary');
+            deleteButton.classList.add('btn-danger');
+        } else {
+            deleteButton.disabled = true;
+            deleteButton.classList.remove('btn-danger');
+            deleteButton.classList.add('btn-secondary');
+        }
+    }
+
+    confirmDelete.addEventListener('change', checkFormValidity);
+    finalConfirm.addEventListener('change', checkFormValidity);
+    deletionReason.addEventListener('change', checkFormValidity);
+});
+
+// Final confirmation before deletion
+document.getElementById('deleteForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const bookTitle = '{{ book.title_of_book|escapejs }}';
+    const confirmMessage = `Are you absolutely sure you want to delete "${bookTitle}"?\n\nThis action cannot be undone!`;
+    
+    if (confirm(confirmMessage)) {
+        this.submit();
+    }
+});
+
+function markAsRecycled() {
+    new bootstrap.Modal(document.getElementById('recycleModal')).show();
+}
+
+function processRecycle() {
+    const formData = new FormData(document.getElementById('recycleForm'));
+    formData.append('book_id', '{{ book.book_id }}');
+    
+    fetch('{% url "core:add_recycle" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Book moved to recycled successfully!');
+            window.location.href = '{% url "core:manage_recycle" %}';
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error processing recycle request');
+    });
+}
+
+function markAsUnavailable() {
+    if (confirm('Mark this book as unavailable? It will be hidden from student searches but kept in the system.')) {
+        fetch(`{% url 'core:book_detail' book.book_id %}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({ action: 'mark_unavailable' })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Book marked as unavailable successfully!');
+                window.location.href = '{% url "core:book_detail" book.book_id %}';
+            } else {
+                alert('Error: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating book status');
+        });
+    }
+}
+</script>
+{% endblock %}

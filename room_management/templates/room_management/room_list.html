@@ -1,0 +1,352 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Room Management{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-building me-2 text-primary"></i>
+                    Room Management
+                </h1>
+                <div>
+                    <a href="{% url 'room_management:add_room' %}" class="btn btn-success">
+                        <i class="bi bi-plus-circle me-2"></i>Add New Room
+                    </a>
+                    <a href="{% url 'room_management:room_bookings' %}" class="btn btn-info">
+                        <i class="bi bi-calendar-check me-2"></i>View Bookings
+                    </a>
+                    <a href="{% url 'room_management:manage_maintenance' %}" class="btn btn-warning">
+                        <i class="bi bi-tools me-2"></i>Maintenance
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Total Rooms</h5>
+                            <h2 class="mb-0">{{ total_rooms }}</h2>
+                            <small class="opacity-75">Active rooms</small>
+                        </div>
+                        <i class="bi bi-building display-4 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Available</h5>
+                            <h2 class="mb-0">{{ available_count }}</h2>
+                            <small class="opacity-75">Ready to use</small>
+                        </div>
+                        <i class="bi bi-check-circle display-4 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Occupied</h5>
+                            <h2 class="mb-0">{{ occupied_count }}</h2>
+                            <small class="opacity-75">Currently in use</small>
+                        </div>
+                        <i class="bi bi-people display-4 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Maintenance</h5>
+                            <h2 class="mb-0">{{ maintenance_count }}</h2>
+                            <small class="opacity-75">Under maintenance</small>
+                        </div>
+                        <i class="bi bi-tools display-4 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Statistics Row -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Reserved</h5>
+                            <h2 class="mb-0">{{ reserved_count }}</h2>
+                            <small class="opacity-75">Reserved rooms</small>
+                        </div>
+                        <i class="bi bi-bookmark display-4 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card bg-secondary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Today's Bookings</h5>
+                            <h2 class="mb-0">{{ todays_bookings }}</h2>
+                            <small class="opacity-75">Bookings today</small>
+                        </div>
+                        <i class="bi bi-calendar-check display-4 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card bg-dark text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Pending Bookings</h5>
+                            <h2 class="mb-0">{{ pending_bookings }}</h2>
+                            <small class="opacity-75">Awaiting approval</small>
+                        </div>
+                        <i class="bi bi-hourglass-split display-4 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card bg-light text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Filtered Results</h5>
+                            <h2 class="mb-0">{{ page_obj.paginator.count }}</h2>
+                            <small class="text-muted">Showing in table</small>
+                        </div>
+                        <i class="bi bi-funnel display-4 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Search Rooms</label>
+                            <input type="text" class="form-control" name="q" value="{{ query }}" 
+                                   placeholder="Room name, number, or location...">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="room_type" class="form-label">Room Type</label>
+                            <select class="form-select" name="room_type">
+                                <option value="">All Types</option>
+                                {% for type_code, type_name in room_types %}
+                                    <option value="{{ type_code }}" {% if room_type_filter == type_code %}selected{% endif %}>
+                                        {{ type_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" name="status">
+                                <option value="">All Status</option>
+                                {% for status_code, status_name in status_choices %}
+                                    <option value="{{ status_code }}" {% if status_filter == status_code %}selected{% endif %}>
+                                        {{ status_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-search"></i> Search
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rooms Grid -->
+    <div class="row">
+        {% if page_obj %}
+            {% for room in page_obj %}            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100">
+                    {% if room.cover_image %}
+                    <img src="{{ room.cover_image.url }}" class="card-img-top" alt="{{ room.room_name }}" style="height: 200px; object-fit: cover;">
+                    {% endif %}
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">{{ room.room_name }}</h5>
+                        <div>
+                            {% if room.status == 'available' %}
+                                <span class="badge bg-success">Available</span>
+                            {% elif room.status == 'occupied' %}
+                                <span class="badge bg-warning">Occupied</span>
+                            {% elif room.status == 'maintenance' %}
+                                <span class="badge bg-danger">Maintenance</span>
+                            {% elif room.status == 'reserved' %}
+                                <span class="badge bg-info">Reserved</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <small class="text-muted">Room Number</small>
+                                <div class="fw-bold">{{ room.room_number }}</div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Type</small>
+                                <div class="fw-bold">{{ room.get_room_type_display }}</div>
+                            </div>
+                        </div>
+                          <div class="row mb-3">
+                            <div class="col-6">
+                                <small class="text-muted">Capacity</small>
+                                <div class="fw-bold">
+                                    <i class="bi bi-people me-1"></i>{{ room.capacity }} people
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Status</small>
+                                <div>
+                                    {% if room.status == 'available' %}
+                                        <span class="badge bg-success">Available</span>
+                                    {% elif room.status == 'occupied' %}
+                                        <span class="badge bg-warning">Occupied</span>
+                                    {% elif room.status == 'maintenance' %}
+                                        <span class="badge bg-danger">Maintenance</span>
+                                    {% else %}
+                                        <span class="badge bg-info">{{ room.get_status_display }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <small class="text-muted">Location</small>
+                            <div class="fw-bold">
+                                <i class="bi bi-geo-alt me-1"></i>{{ room.location }}
+                            </div>
+                        </div>
+
+                        {% if room.facilities %}
+                            <div class="mb-3">
+                                <small class="text-muted">Facilities</small>
+                                <div>{{ room.facilities|truncatewords:10 }}</div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Quick Status Check -->
+                        {% if room.is_available_now %}
+                            <div class="alert alert-success py-2 mb-3">
+                                <i class="bi bi-check-circle me-1"></i>
+                                Available now
+                            </div>
+                        {% else %}
+                            <div class="alert alert-warning py-2 mb-3">
+                                <i class="bi bi-clock me-1"></i>
+                                Currently busy
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer">
+                        <div class="btn-group w-100" role="group">
+                            <a href="{% url 'room_management:room_detail' room.room_id %}" 
+                               class="btn btn-outline-primary">
+                                <i class="bi bi-eye"></i> View
+                            </a>                            <a href="{% url 'room_management:update_room' room.room_id %}" 
+                               class="btn btn-outline-warning">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            {% if room.status == 'available' %}
+                                <a href="{% url 'room_management:book_room' %}?room={{ room.room_id }}" class="btn btn-outline-success">
+                                    <i class="bi bi-calendar-plus"></i> Book
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="bi bi-building display-1 text-muted"></i>
+                    <h5 class="mt-3">No rooms found</h5>
+                    <p class="text-muted">Try adjusting your search criteria or add a new room.</p>
+                    <a href="{% url 'room_management:add_room' %}" class="btn btn-success">
+                        <i class="bi bi-plus-circle me-2"></i>Add First Room
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if room_type_filter %}&room_type={{ room_type_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if room_type_filter %}&room_type={{ room_type_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Previous</a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                </li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if room_type_filter %}&room_type={{ room_type_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if room_type_filter %}&room_type={{ room_type_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Last</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh room status every 5 minutes
+setInterval(function() {
+    location.reload();
+}, 300000);
+</script>
+{% endblock %}

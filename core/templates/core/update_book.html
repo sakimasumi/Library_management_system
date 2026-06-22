@@ -1,0 +1,513 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Book - {{ book.title_of_book }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-pencil-square me-2 text-warning"></i>
+                    Edit Book
+                </h1>
+                <div>
+                    <a href="{% url 'core:book_detail' book.book_id %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Book
+                    </a>
+                    <a href="{% url 'core:book_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-list me-2"></i>All Books
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Book Form -->
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Update Book Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="updateBookForm">
+                        {% csrf_token %}
+                        
+                        <!-- Current Book Cover -->
+                        {% if book.image %}
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <label class="form-label">Current Book Cover</label>
+                                    <div class="text-center">
+                                        <img src="{{ book.image.url }}" alt="{{ book.title_of_book }}" 
+                                             class="img-thumbnail" style="max-height: 200px;">
+                                        <div class="form-check mt-2">
+                                            <input class="form-check-input" type="checkbox" name="remove_image" id="removeImage">
+                                            <label class="form-check-label" for="removeImage">
+                                                Remove current image
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Basic Information -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_title_of_book" class="form-label">Title *</label>
+                                    {{ form.title_of_book }}
+                                    {% if form.title_of_book.errors %}
+                                        <div class="text-danger small">{{ form.title_of_book.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_book_id_isbn" class="form-label">ISBN *</label>
+                                    {{ form.book_id_isbn }}
+                                    {% if form.book_id_isbn.errors %}
+                                        <div class="text-danger small">{{ form.book_id_isbn.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_author" class="form-label">Author *</label>
+                                    {{ form.author }}
+                                    <div class="form-text">
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#addAuthorModal">
+                                            <i class="bi bi-plus-circle"></i> Add new author
+                                        </a>
+                                    </div>
+                                    {% if form.author.errors %}
+                                        <div class="text-danger small">{{ form.author.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_category" class="form-label">Category *</label>
+                                    {{ form.category }}
+                                    <div class="form-text">
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                                            <i class="bi bi-plus-circle"></i> Add new category
+                                        </a>
+                                    </div>
+                                    {% if form.category.errors %}
+                                        <div class="text-danger small">{{ form.category.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_publisher" class="form-label">Publisher</label>
+                                    {{ form.publisher }}
+                                    <div class="form-text">
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#addPublisherModal">
+                                            <i class="bi bi-plus-circle"></i> Add new publisher
+                                        </a>
+                                    </div>
+                                    {% if form.publisher.errors %}
+                                        <div class="text-danger small">{{ form.publisher.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_publication_date" class="form-label">Publication Date</label>
+                                    {{ form.publication_date }}
+                                    {% if form.publication_date.errors %}
+                                        <div class="text-danger small">{{ form.publication_date.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="id_pages" class="form-label">Pages</label>
+                                    {{ form.pages }}
+                                    {% if form.pages.errors %}
+                                        <div class="text-danger small">{{ form.pages.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="id_language" class="form-label">Language</label>
+                                    {{ form.language }}
+                                    {% if form.language.errors %}
+                                        <div class="text-danger small">{{ form.language.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="id_state_of_book" class="form-label">Condition</label>
+                                    {{ form.state_of_book }}
+                                    {% if form.state_of_book.errors %}
+                                        <div class="text-danger small">{{ form.state_of_book.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="id_description" class="form-label">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- New Book Cover -->
+                        <div class="mb-3">
+                            <label for="id_image" class="form-label">Update Book Cover</label>
+                            {{ form.image }}
+                            <div class="form-text">Upload new book cover image (optional). Max size: 5MB</div>
+                            {% if form.image.errors %}
+                                <div class="text-danger small">{{ form.image.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Change Log -->
+                        <hr>
+                        <h6 class="mb-3">Change Log</h6>
+                        <div class="mb-3">
+                            <label for="change_reason" class="form-label">Reason for Update</label>
+                            <textarea class="form-control" id="change_reason" name="change_reason" rows="2" 
+                                      placeholder="Describe what changes were made and why..."></textarea>
+                            <div class="form-text">This will be logged for audit purposes</div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'core:book_detail' book.book_id %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                            <button type="button" class="btn btn-info" onclick="previewChanges()">
+                                <i class="bi bi-eye me-2"></i>Preview Changes
+                            </button>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-check-circle me-2"></i>Update Book
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Author Modal -->
+<div class="modal fade" id="addAuthorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Author</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addAuthorForm">
+                    <div class="mb-3">
+                        <label for="author_name" class="form-label">Author Name *</label>
+                        <input type="text" class="form-control" id="author_name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="author_biography" class="form-label">Biography</label>
+                        <textarea class="form-control" id="author_biography" name="biography" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="author_nationality" class="form-label">Nationality</label>
+                        <input type="text" class="form-control" id="author_nationality" name="nationality">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addAuthor()">Add Author</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Category Modal -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addCategoryForm">
+                    <div class="mb-3">
+                        <label for="category_name" class="form-label">Category Name *</label>
+                        <input type="text" class="form-control" id="category_name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="category_description" class="form-label">Description</label>
+                        <textarea class="form-control" id="category_description" name="description" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addCategory()">Add Category</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Publisher Modal -->
+<div class="modal fade" id="addPublisherModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Publisher</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addPublisherForm">
+                    <div class="mb-3">
+                        <label for="publisher_name" class="form-label">Publisher Name *</label>
+                        <input type="text" class="form-control" id="publisher_name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="publisher_address" class="form-label">Address</label>
+                        <textarea class="form-control" id="publisher_address" name="address" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="publisher_website" class="form-label">Website</label>
+                        <input type="url" class="form-control" id="publisher_website" name="website">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addPublisher()">Add Publisher</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Changes Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Preview Changes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="previewContent">
+                    <!-- Preview content will be populated by JavaScript -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close Preview</button>
+                <button type="button" class="btn btn-warning" onclick="document.getElementById('updateBookForm').submit()">
+                    Confirm Update
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Original values for comparison
+const originalValues = {
+    title: '{{ book.title_of_book|escapejs }}',
+    isbn: '{{ book.book_id_isbn|escapejs }}',
+    author: '{{ book.author.name|escapejs }}',
+    category: '{{ book.category.name|escapejs }}',
+    publisher: '{{ book.publisher.name|escapejs }}',
+    language: '{{ book.language|escapejs }}',
+    pages: '{{ book.pages|default:""|escapejs }}',
+    condition: '{{ book.state_of_book|escapejs }}',
+    description: '{{ book.description|escapejs }}'
+};
+
+function previewChanges() {
+    const currentValues = {
+        title: document.getElementById('id_title_of_book').value,
+        isbn: document.getElementById('id_book_id_isbn').value,
+        author: document.getElementById('id_author').selectedOptions[0]?.text || '',
+        category: document.getElementById('id_category').selectedOptions[0]?.text || '',
+        publisher: document.getElementById('id_publisher').selectedOptions[0]?.text || '',
+        language: document.getElementById('id_language').value,
+        pages: document.getElementById('id_pages').value,
+        condition: document.getElementById('id_state_of_book').value,
+        description: document.getElementById('id_description').value
+    };
+
+    let changesHtml = '<h6>Changes Summary:</h6><div class="table-responsive"><table class="table table-sm">';
+    changesHtml += '<thead><tr><th>Field</th><th>Original</th><th>New</th></tr></thead><tbody>';
+
+    let hasChanges = false;
+    
+    Object.keys(originalValues).forEach(key => {
+        if (originalValues[key] !== currentValues[key]) {
+            hasChanges = true;
+            changesHtml += `
+                <tr class="table-warning">
+                    <td><strong>${key.charAt(0).toUpperCase() + key.slice(1)}</strong></td>
+                    <td>${originalValues[key] || '<em>Empty</em>'}</td>
+                    <td>${currentValues[key] || '<em>Empty</em>'}</td>
+                </tr>
+            `;
+        }
+    });
+
+    if (!hasChanges) {
+        changesHtml += '<tr><td colspan="3" class="text-center text-muted">No changes detected</td></tr>';
+    }
+
+    changesHtml += '</tbody></table></div>';
+
+    document.getElementById('previewContent').innerHTML = changesHtml;
+    new bootstrap.Modal(document.getElementById('previewModal')).show();
+}
+
+// AJAX functions for adding new records
+function addAuthor() {
+    const formData = new FormData(document.getElementById('addAuthorForm'));
+    
+    fetch('{% url "core:add_author" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const authorSelect = document.getElementById('id_author');
+            const option = new Option(data.author.name, data.author.id, true, true);
+            authorSelect.add(option);
+            
+            bootstrap.Modal.getInstance(document.getElementById('addAuthorModal')).hide();
+            document.getElementById('addAuthorForm').reset();
+            
+            showAlert('Author added successfully!', 'success');
+        } else {
+            showAlert('Error adding author: ' + (data.error || 'Unknown error'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Error adding author', 'error');
+    });
+}
+
+function addCategory() {
+    const formData = new FormData(document.getElementById('addCategoryForm'));
+    
+    fetch('{% url "core:add_category" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const categorySelect = document.getElementById('id_category');
+            const option = new Option(data.category.name, data.category.id, true, true);
+            categorySelect.add(option);
+            
+            bootstrap.Modal.getInstance(document.getElementById('addCategoryModal')).hide();
+            document.getElementById('addCategoryForm').reset();
+            
+            showAlert('Category added successfully!', 'success');
+        } else {
+            showAlert('Error adding category: ' + (data.error || 'Unknown error'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Error adding category', 'error');
+    });
+}
+
+function addPublisher() {
+    const formData = new FormData(document.getElementById('addPublisherForm'));
+    
+    fetch('{% url "core:add_publisher" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const publisherSelect = document.getElementById('id_publisher');
+            const option = new Option(data.publisher.name, data.publisher.id, true, true);
+            publisherSelect.add(option);
+            
+            bootstrap.Modal.getInstance(document.getElementById('addPublisherModal')).hide();
+            document.getElementById('addPublisherForm').reset();
+            
+            showAlert('Publisher added successfully!', 'success');
+        } else {
+            showAlert('Error adding publisher: ' + (data.error || 'Unknown error'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Error adding publisher', 'error');
+    });
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+    alertDiv.style.top = '20px';
+    alertDiv.style.right = '20px';
+    alertDiv.style.zIndex = '9999';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+
+// Form validation
+document.getElementById('updateBookForm').addEventListener('submit', function(e) {
+    const title = document.getElementById('id_title_of_book').value.trim();
+    const isbn = document.getElementById('id_book_id_isbn').value.trim();
+    const author = document.getElementById('id_author').value;
+    const category = document.getElementById('id_category').value;
+    
+    if (!title || !isbn || !author || !category) {
+        e.preventDefault();
+        showAlert('Please fill in all required fields (Title, ISBN, Author, Category)', 'error');
+        return false;
+    }
+});
+</script>
+{% endblock %}

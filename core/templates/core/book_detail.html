@@ -1,0 +1,416 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ book.title_of_book }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-book me-2 text-primary"></i>
+                    Book Details
+                </h1>
+                <div>
+                    <a href="{% url 'core:book_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Books
+                    </a>
+                    <a href="{% url 'core:update_book' book.book_id %}" class="btn btn-warning">
+                        <i class="bi bi-pencil me-2"></i>Edit Book
+                    </a>
+                    <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                        <i class="bi bi-trash me-2"></i>Delete Book
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Book Information -->
+    <div class="row">
+        <!-- Book Cover and Basic Info -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <!-- Enhanced Cover Display -->
+                    <div class="position-relative mb-3">
+                        {% if book.image %}
+                            <img src="{{ book.image.url }}" alt="{{ book.title_of_book }} Cover" 
+                                 class="img-fluid rounded shadow-lg" style="max-height: 400px; object-fit: cover;">
+                        {% elif book.cover_image %}
+                            <img src="{{ book.cover_image.url }}" alt="{{ book.title_of_book }} Cover" 
+                                 class="img-fluid rounded shadow-lg" style="max-height: 400px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-gradient-primary d-flex align-items-center justify-content-center rounded shadow" 
+                                 style="height: 400px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <div class="text-center text-white">
+                                    <i class="bi bi-book display-1"></i>
+                                    <p class="mt-2 h6">{{ book.title_of_book|truncatechars:20 }}</p>
+                                    <small class="opacity-75">No Cover Available</small>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Book Status Badge -->
+                        <div class="position-absolute top-0 end-0 m-2">
+                            {% if book.is_available %}
+                                <span class="badge bg-success fs-6">
+                                    <i class="bi bi-check-circle me-1"></i>Available
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning fs-6">
+                                    <i class="bi bi-clock me-1"></i>Currently Borrowed
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Book Title and Condition -->
+                    <h5 class="card-title">{{ book.title_of_book }}</h5>
+                    <p class="text-muted">by {{ book.author.name }}</p>
+                    
+                    <div class="mt-2">
+                        <span class="badge bg-secondary">{{ book.state_of_book|title }} Condition</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightning me-2"></i>Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'core:manual_borrow' book.book_id %}" class="btn btn-success">
+                            <i class="bi bi-person-plus me-2"></i>Manual Borrow
+                        </a>
+                        <a href="{% url 'core:update_inventory' book.book_id %}" class="btn btn-info">
+                            <i class="bi bi-box me-2"></i>Update Inventory
+                        </a>
+                        <a href="{% url 'core:view_full_inventory' book.book_id %}" class="btn btn-secondary">
+                            <i class="bi bi-list-ul me-2"></i>View Full Inventory
+                        </a>
+                        <a href="{% url 'core:change_cover' book.book_id %}" class="btn btn-warning">
+                            <i class="bi bi-image me-2"></i>Change Cover
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Book Statistics -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-graph-up me-2"></i>Statistics
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h4 class="text-primary">{{ borrowings|length }}</h4>
+                            <small class="text-muted">Times Borrowed</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-success">{{ reservations|length }}</h4>
+                            <small class="text-muted">Active Reservations</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Information -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>Book Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong><i class="bi bi-book me-2"></i>Title:</strong></td>
+                                    <td>{{ book.title_of_book }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong><i class="bi bi-upc me-2"></i>ISBN:</strong></td>
+                                    <td><code>{{ book.book_id_isbn }}</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong><i class="bi bi-person me-2"></i>Author:</strong></td>
+                                    <td>
+                                        <a href="{% url 'core:author_detail' book.author.id %}" class="text-decoration-none">
+                                            {{ book.author.name }}
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong><i class="bi bi-building me-2"></i>Publisher:</strong></td>
+                                    <td>
+                                        {% if book.publisher %}
+                                            <a href="{% url 'core:publisher_detail' book.publisher.id %}" class="text-decoration-none">
+                                                {{ book.publisher.name }}
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted">Not specified</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong><i class="bi bi-tags me-2"></i>Category:</strong></td>
+                                    <td>
+                                        <a href="{% url 'core:category_detail' book.category.id %}" class="text-decoration-none">
+                                            <span class="badge bg-secondary">{{ book.category.name }}</span>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong><i class="bi bi-calendar me-2"></i>Publication Date:</strong></td>
+                                    <td>{{ book.publication_date|date:"M d, Y"|default:"Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong><i class="bi bi-file-text me-2"></i>Pages:</strong></td>
+                                    <td>{{ book.pages|default:"Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong><i class="bi bi-translate me-2"></i>Language:</strong></td>
+                                    <td>{{ book.language|default:"English" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong><i class="bi bi-star me-2"></i>Condition:</strong></td>
+                                    <td>
+                                        {% if book.state_of_book == 'new' %}
+                                            <span class="badge bg-success">{{ book.state_of_book|title }}</span>
+                                        {% elif book.state_of_book == 'good' %}
+                                            <span class="badge bg-primary">{{ book.state_of_book|title }}</span>
+                                        {% elif book.state_of_book == 'fair' %}
+                                            <span class="badge bg-warning">{{ book.state_of_book|title }}</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">{{ book.state_of_book|title }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong><i class="bi bi-clock me-2"></i>Added:</strong></td>
+                                    <td>{{ book.created_at|date:"M d, Y H:i"|default:"Not available" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    {% if book.description %}
+                        <hr>
+                        <h6><i class="bi bi-card-text me-2"></i>Description</h6>
+                        <div class="p-3 bg-light rounded">
+                            <p class="mb-0">{{ book.description }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Borrowing History -->
+            <div class="card mt-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i>Recent Borrowing History
+                    </h6>
+                    <small class="text-muted">Last 10 records</small>
+                </div>
+                <div class="card-body">
+                    {% if borrowings %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Borrower</th>
+                                        <th>Borrow Date</th>
+                                        <th>Due Date</th>
+                                        <th>Return Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for borrow in borrowings %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-person-circle me-2"></i>
+                                                {{ borrow.member.user.get_full_name|default:borrow.member.user.username }}
+                                            </div>
+                                        </td>
+                                        <td>{{ borrow.date_borrow|date:"M d, Y" }}</td>
+                                        <td>{{ borrow.due_date|date:"M d, Y" }}</td>
+                                        <td>
+                                            {% if borrow.date_return %}
+                                                {{ borrow.date_return|date:"M d, Y" }}
+                                            {% else %}
+                                                <span class="text-muted">Not returned</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if borrow.status == 'returned' %}
+                                                <span class="badge bg-success">Returned</span>
+                                            {% elif borrow.status == 'overdue' %}
+                                                <span class="badge bg-danger">Overdue</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Active</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-inbox text-muted fs-1"></i>
+                            <p class="text-muted mt-2">No borrowing history available.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Current Reservations -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-bookmark me-2"></i>Current Reservations
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if reservations %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Reserved Date</th>
+                                        <th>Expires</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for reservation in reservations %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-person-circle me-2"></i>
+                                                {{ reservation.member.user.get_full_name|default:reservation.member.user.username }}
+                                            </div>
+                                        </td>
+                                        <td>{{ reservation.reservation_date|date:"M d, Y" }}</td>
+                                        <td>{{ reservation.expiry_date|date:"M d, Y" }}</td>
+                                        <td>
+                                            <button type="button" class="btn btn-sm btn-success" 
+                                                    onclick="processReservation('{{ reservation.id }}')">
+                                                <i class="bi bi-check me-1"></i>Process
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-bookmark text-muted fs-1"></i>
+                            <p class="text-muted mt-2">No active reservations.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <i class="bi bi-trash display-1 text-danger"></i>
+                    <h6 class="mt-3">Are you sure you want to delete this book?</h6>
+                    <div class="alert alert-warning mt-3">
+                        <strong>{{ book.title_of_book }}</strong>
+                        <p class="mb-0 mt-2">This action cannot be undone and will affect all related records including borrowing history and reservations.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x me-2"></i>Cancel
+                </button>
+                <form method="post" action="{% url 'core:delete_book' book.book_id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-2"></i>Delete Book
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete() {
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+function showBorrowModal() {
+    alert('Manual borrow feature - to be implemented');
+}
+
+function showInventoryModal() {
+    alert('Inventory update feature - to be implemented');
+}
+
+function changeCover() {
+    alert('Cover change feature - to be implemented via edit book page');
+}
+
+function processReservation(reservationId) {
+    if (confirm('Process this reservation and mark as borrowed?')) {
+        // AJAX call to process reservation
+        fetch(`/student/reservations/${reservationId}/process/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error processing reservation');
+        });
+    }
+}
+</script>
+{% endblock %}

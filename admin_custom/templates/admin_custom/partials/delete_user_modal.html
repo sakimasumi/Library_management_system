@@ -1,0 +1,83 @@
+<!-- Delete User Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteUserModalLabel">
+                    <i class="bi bi-trash me-2"></i>Delete User
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <h6><i class="bi bi-exclamation-triangle me-2"></i>⚠️ DANGER ZONE</h6>
+                    <p class="mb-0">This action <strong>CANNOT BE UNDONE</strong>. This will permanently delete the user account and ALL associated data.</p>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label"><strong>User to Delete:</strong></label>
+                    <div class="p-3 bg-light rounded border">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                <i class="bi bi-person"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1" id="delete_username">-</h6>
+                                <small class="text-muted" id="delete_email">-</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label"><strong>What will be deleted:</strong></label>
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="bi bi-person-x text-danger me-2"></i>
+                            User account and profile
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="bi bi-book text-danger me-2"></i>
+                            All borrowing history
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="bi bi-clock-history text-danger me-2"></i>
+                            All activity logs
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <i class="bi bi-currency-dollar text-danger me-2"></i>
+                            All fine records
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="deleteConfirmText" class="form-label">
+                        <strong>Type "DELETE" to confirm:</strong>
+                    </label>
+                    <input type="text" class="form-control" id="deleteConfirmText" placeholder="Type DELETE to confirm">
+                </div>
+                
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="confirmDelete" required>
+                    <label class="form-check-label" for="confirmDelete">
+                        I understand that this action is permanent and cannot be undone.
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteUser" disabled>
+                    <span class="btn-text">
+                        <i class="bi bi-trash me-2"></i>Delete Forever
+                    </span>
+                    <span class="btn-loading d-none">
+                        <span class="spinner-border spinner-border-sm me-2"></span>Deleting...
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,388 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Full Inventory - {{ book.title_of_book }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-box me-2 text-primary"></i>
+                    Full Inventory Details
+                </h1>
+                <div>
+                    <a href="{% url 'core:book_detail' book.book_id %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Book Details
+                    </a>
+                    <a href="{% url 'core:update_inventory' book.book_id %}" class="btn btn-warning">
+                        <i class="bi bi-pencil me-2"></i>Update Inventory
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Book Basic Info -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-2">
+                            {% if book.image %}
+                                <img src="{{ book.image.url }}" alt="{{ book.title_of_book }}" 
+                                     class="img-fluid rounded" style="max-height: 120px;">
+                            {% else %}
+                                <div class="bg-secondary rounded d-flex align-items-center justify-content-center" 
+                                     style="height: 120px; width: 90px;">
+                                    <i class="bi bi-book text-white fs-3"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-10">
+                            <h4>{{ book.title_of_book }}</h4>
+                            <p class="text-muted mb-1">
+                                <strong>Author:</strong> {{ book.author.name }} | 
+                                <strong>ISBN:</strong> {{ book.book_id_isbn }} | 
+                                <strong>Category:</strong> {{ book.category.name }}
+                            </p>
+                            <p class="mb-0">
+                                <span class="badge {% if book.is_available %}bg-success{% else %}bg-warning{% endif %} me-2">
+                                    {% if book.is_available %}Available{% else %}Not Available{% endif %}
+                                </span>
+                                <span class="badge bg-info me-2">{{ inventory.shelf_location }}</span>
+                                <span class="badge bg-secondary">{{ book.state_of_book|title }}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-up me-2"></i>Inventory Overview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-4">
+                        <div class="col-md-3">
+                            <div class="border rounded p-3 bg-light">
+                                <h3 class="text-primary mb-0">{{ inventory.total_copies }}</h3>
+                                <small class="text-muted">Total Copies</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3 bg-success bg-opacity-10">
+                                <h3 class="text-success mb-0">{{ inventory.available_copies }}</h3>
+                                <small class="text-muted">Available ({{ availability_percentage }}%)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3 bg-warning bg-opacity-10">
+                                <h3 class="text-warning mb-0">{{ inventory.borrowed_copies }}</h3>
+                                <small class="text-muted">Borrowed</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3 bg-info bg-opacity-10">
+                                <h3 class="text-info mb-0">{{ inventory.reserved_copies }}</h3>
+                                <small class="text-muted">Reserved</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="border rounded p-3 bg-danger bg-opacity-10">
+                                <h4 class="text-danger mb-0">{{ inventory.damaged_copies }}</h4>
+                                <small class="text-muted">Damaged ({{ damaged_percentage }}%)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border rounded p-3 bg-secondary bg-opacity-10">
+                                <h4 class="text-secondary mb-0">{{ total_in_circulation }}</h4>
+                                <small class="text-muted">In Circulation</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border rounded p-3 bg-primary bg-opacity-10">
+                                <h4 class="text-primary mb-0">{{ utilization_rate }}%</h4>
+                                <small class="text-muted">Utilization Rate</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>Quick Info
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless table-sm">
+                        <tr>
+                            <td><strong>Last Updated:</strong></td>
+                            <td>{{ inventory.last_updated|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Shelf Location:</strong></td>
+                            <td>
+                                <span class="badge bg-secondary">{{ inventory.shelf_location }}</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Book Condition:</strong></td>
+                            <td>
+                                <span class="badge bg-info">{{ book.state_of_book|title }}</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Availability:</strong></td>
+                            <td>
+                                {% if inventory.available_copies > 0 %}
+                                    <span class="text-success">
+                                        <i class="bi bi-check-circle me-1"></i>{{ inventory.available_copies }} available
+                                    </span>
+                                {% else %}
+                                    <span class="text-danger">
+                                        <i class="bi bi-x-circle me-1"></i>Out of stock
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% if total_borrowings > 0 %}
+                        <tr>
+                            <td><strong>Total Borrowed:</strong></td>
+                            <td>{{ total_borrowings }} times</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Copy Distribution Table -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-bar-chart me-2"></i>Copy Distribution
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-success text-center">Available</th>
+                                    <th class="text-warning text-center">Borrowed</th>
+                                    <th class="text-info text-center">Reserved</th>
+                                    <th class="text-danger text-center">Damaged</th>
+                                    <th class="text-primary text-center">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="text-center">
+                                    <td class="bg-success bg-opacity-10">
+                                        <strong class="fs-5">{{ inventory.available_copies }}</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            {% if inventory.total_copies > 0 %}
+                                                ({{ inventory.available_copies }}/{{ inventory.total_copies }} copies)
+                                            {% endif %}
+                                        </small>
+                                    </td>
+                                    <td class="bg-warning bg-opacity-10">
+                                        <strong class="fs-5">{{ inventory.borrowed_copies }}</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            {% if inventory.total_copies > 0 %}
+                                                ({{ inventory.borrowed_copies }}/{{ inventory.total_copies }} copies)
+                                            {% endif %}
+                                        </small>
+                                    </td>
+                                    <td class="bg-info bg-opacity-10">
+                                        <strong class="fs-5">{{ inventory.reserved_copies }}</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            {% if inventory.total_copies > 0 %}
+                                                ({{ inventory.reserved_copies }}/{{ inventory.total_copies }} copies)
+                                            {% endif %}
+                                        </small>
+                                    </td>
+                                    <td class="bg-danger bg-opacity-10">
+                                        <strong class="fs-5">{{ inventory.damaged_copies }}</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            {% if inventory.total_copies > 0 %}
+                                                ({{ inventory.damaged_copies }}/{{ inventory.total_copies }} copies)
+                                            {% endif %}
+                                        </small>
+                                    </td>
+                                    <td class="bg-primary bg-opacity-10">
+                                        <strong class="fs-5">{{ inventory.total_copies }}</strong>
+                                        <br>
+                                        <small class="text-muted">Total</small>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i>Recent Borrowings
+                        {% if current_borrowings > 0 %}
+                            <span class="badge bg-warning ms-2">{{ current_borrowings }} Active</span>
+                        {% endif %}
+                        {% if overdue_borrowings > 0 %}
+                            <span class="badge bg-danger ms-1">{{ overdue_borrowings }} Overdue</span>
+                        {% endif %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_borrowings %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Borrower</th>
+                                        <th>Borrowed</th>
+                                        <th>Due Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for borrowing in recent_borrowings %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ borrowing.member.name }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ borrowing.member.member_id }}</small>
+                                        </td>
+                                        <td>{{ borrowing.date_borrow|date:"M d, Y" }}</td>
+                                        <td>
+                                            {{ borrowing.date_due|date:"M d, Y" }}
+                                            {% if borrowing.is_overdue %}
+                                                <br><small class="text-danger">{{ borrowing.days_overdue }} days overdue</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if borrowing.is_returned %}
+                                                <span class="badge bg-success">Returned</span>
+                                                {% if borrowing.date_return %}
+                                                    <br><small class="text-muted">{{ borrowing.date_return|date:"M d" }}</small>
+                                                {% endif %}
+                                            {% elif borrowing.is_overdue %}
+                                                <span class="badge bg-danger">Overdue</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Active</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        {% if total_borrowings > 10 %}
+                            <div class="text-center mt-2">
+                                <small class="text-muted">Showing 10 of {{ total_borrowings }} total borrowings</small>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-2 mb-0">No borrowing history</p>
+                            <small class="text-muted">This book hasn't been borrowed yet</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-bookmark me-2"></i>Active Reservations
+                        {% if active_reservations.count > 0 %}
+                            <span class="badge bg-info ms-2">{{ active_reservations.count }}</span>
+                        {% endif %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if active_reservations %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Reserved</th>
+                                        <th>Expires</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for reservation in active_reservations %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ reservation.member.name }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ reservation.member.member_id }}</small>
+                                        </td>
+                                        <td>{{ reservation.date_reserved|date:"M d, Y" }}</td>
+                                        <td>
+                                            {{ reservation.date_expires|date:"M d, Y" }}
+                                            {% if reservation.is_expired %}
+                                                <br><small class="text-danger">Expired</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if reservation.is_expired %}
+                                                <span class="badge bg-danger">Expired</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-bookmark text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-2 mb-0">No active reservations</p>
+                            <small class="text-muted">No one has reserved this book</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,87 @@
+<!-- User Details Modal -->
+<div class="modal fade" id="userDetailModal" tabindex="-1" aria-labelledby="userDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="userDetailModalLabel">
+                    <i class="bi bi-person-circle me-2"></i>User Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-0 bg-light h-100">
+                            <div class="card-header bg-transparent">
+                                <h6 class="mb-0"><i class="bi bi-person me-2"></i>Basic Information</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-2">
+                                    <div class="col-5"><strong>Username:</strong></div>
+                                    <div class="col-7" id="detail_username">-</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-5"><strong>Full Name:</strong></div>
+                                    <div class="col-7" id="detail_full_name">-</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-5"><strong>Email:</strong></div>
+                                    <div class="col-7" id="detail_email">-</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-5"><strong>User Type:</strong></div>
+                                    <div class="col-7">
+                                        <span class="badge" id="detail_user_type">-</span>
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-5"><strong>Status:</strong></div>
+                                    <div class="col-7">
+                                        <span class="badge" id="detail_status">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 bg-light h-100">
+                            <div class="card-header bg-transparent">
+                                <h6 class="mb-0"><i class="bi bi-clock me-2"></i>Account Information</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-2">
+                                    <div class="col-5"><strong>Date Joined:</strong></div>
+                                    <div class="col-7" id="detail_date_joined">-</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-5"><strong>Last Login:</strong></div>
+                                    <div class="col-7" id="detail_last_login">-</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-5"><strong>Staff Status:</strong></div>
+                                    <div class="col-7">
+                                        <span class="badge" id="detail_staff_status">-</span>
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-5"><strong>Superuser:</strong></div>
+                                    <div class="col-7">
+                                        <span class="badge" id="detail_superuser_status">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-2"></i>Close
+                </button>
+                <button type="button" class="btn btn-primary" id="editUserFromDetail">
+                    <i class="bi bi-pencil me-2"></i>Edit User
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

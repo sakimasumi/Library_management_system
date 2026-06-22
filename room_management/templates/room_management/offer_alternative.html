@@ -1,0 +1,325 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Offer Alternative Slot - Room Booking System{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-calendar-plus"></i> Offer Alternative Slot</h2>
+        <div>
+            <a href="{% url 'room_management:queue_detail' queue.queue_id %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Details
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Original Request -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Original Request</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless table-sm">
+                        <tr>
+                            <th>Student:</th>
+                            <td>{{ queue.student.user.get_full_name|default:queue.student.user.username }}</td>
+                        </tr>
+                        <tr>
+                            <th>Room:</th>
+                            <td>{{ queue.room.room_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Preferred Date:</th>
+                            <td>{{ queue.preferred_date|date:"M d, Y" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Preferred Time:</th>
+                            <td>{{ queue.preferred_start_time|time:"g:i A" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Duration:</th>
+                            <td>{{ queue.duration_hours }} hours</td>
+                        </tr>
+                        <tr>
+                            <th>Queue Position:</th>
+                            <td><span class="badge bg-primary">{{ queue.queue_position }}</span></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Room Availability Calendar -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Room Availability</h5>
+                </div>
+                <div class="card-body">
+                    <div id="availability-calendar"></div>
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i> Green dates have available slots
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alternative Slot Form -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Suggest Alternative Slots</h5>
+                </div>
+                <div class="card-body">
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <form method="post" id="alternativeForm">
+                        {% csrf_token %}
+                        <div id="alternative-slots">
+                            <!-- Initial slot form -->
+                            <div class="alternative-slot-form border rounded p-3 mb-3" data-slot="1">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="mb-0">Alternative Slot #1</h6>
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-slot" style="display: none;">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Date</label>
+                                        <input type="date" name="alternative_date_1" class="form-control" 
+                                               min="{{ min_date|date:'Y-m-d' }}" max="{{ max_date|date:'Y-m-d' }}" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Start Time</label>
+                                        <input type="time" name="alternative_start_time_1" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Duration (hours)</label>
+                                        <select name="duration_hours_1" class="form-select" required>
+                                            <option value="1" {% if queue.duration_hours == 1 %}selected{% endif %}>1 hour</option>
+                                            <option value="2" {% if queue.duration_hours == 2 %}selected{% endif %}>2 hours</option>
+                                            <option value="3" {% if queue.duration_hours == 3 %}selected{% endif %}>3 hours</option>
+                                            <option value="4" {% if queue.duration_hours == 4 %}selected{% endif %}>4 hours</option>
+                                            <option value="6" {% if queue.duration_hours == 6 %}selected{% endif %}>6 hours</option>
+                                            <option value="8" {% if queue.duration_hours == 8 %}selected{% endif %}>8 hours</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <label class="form-label">Additional Notes (Optional)</label>
+                                        <textarea name="notes_1" class="form-control" rows="2" 
+                                                placeholder="Any additional information about this alternative slot..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <button type="button" id="add-slot" class="btn btn-outline-primary">
+                                <i class="fas fa-plus"></i> Add Another Alternative Slot
+                            </button>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Notification Message</label>
+                                <textarea name="notification_message" class="form-control" rows="4" 
+                                        placeholder="Custom message to send with the alternative slots...">Dear {{ queue.student.user.first_name|default:queue.student.user.username }},
+
+We have alternative time slots available for your room booking request. Please review the options below and let us know your preference.
+
+Thank you for your patience.</textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Response Deadline</label>
+                                <input type="datetime-local" name="response_deadline" class="form-control" 
+                                       value="{{ default_deadline|date:'Y-m-d\TH:i' }}" required>
+                                <small class="form-text text-muted">
+                                    Student must respond by this time or the alternatives will expire.
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="send_email" id="send_email" checked>
+                                <label class="form-check-label" for="send_email">
+                                    Send email notification to student
+                                </label>
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-secondary me-2" onclick="history.back()">Cancel</button>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-paper-plane"></i> Send Alternative Slots
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Previously Offered Alternatives -->
+            {% if previous_alternatives %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Previously Offered Alternatives</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Duration</th>
+                                    <th>Offered</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for alt in previous_alternatives %}
+                                <tr>
+                                    <td>{{ alt.alternative_date|date:"M d" }}</td>
+                                    <td>{{ alt.alternative_start_time|time:"g:i A" }}</td>
+                                    <td>{{ alt.duration_hours }}h</td>
+                                    <td>{{ alt.offered_at|date:"M d, g:i A" }}</td>
+                                    <td>
+                                        {% if alt.response_status == 'pending' %}
+                                            <span class="badge bg-warning">Pending</span>
+                                        {% elif alt.response_status == 'accepted' %}
+                                            <span class="badge bg-success">Accepted</span>
+                                        {% elif alt.response_status == 'declined' %}
+                                            <span class="badge bg-danger">Declined</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+let slotCounter = 1;
+
+document.getElementById('add-slot').addEventListener('click', function() {
+    if (slotCounter >= 5) {
+        alert('Maximum 5 alternative slots allowed');
+        return;
+    }
+    
+    slotCounter++;
+    const slotForm = document.querySelector('.alternative-slot-form').cloneNode(true);
+    
+    // Update slot number and form fields
+    slotForm.setAttribute('data-slot', slotCounter);
+    slotForm.querySelector('h6').textContent = `Alternative Slot #${slotCounter}`;
+    
+    // Update input names
+    const inputs = slotForm.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        const name = input.name;
+        if (name) {
+            input.name = name.replace(/_\d+$/, `_${slotCounter}`);
+        }
+        if (input.type !== 'checkbox') {
+            input.value = '';
+        }
+    });
+    
+    // Show remove button
+    slotForm.querySelector('.remove-slot').style.display = 'block';
+    
+    document.getElementById('alternative-slots').appendChild(slotForm);
+    
+    // Hide add button if at max slots
+    if (slotCounter >= 5) {
+        this.style.display = 'none';
+    }
+});
+
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove-slot') || e.target.closest('.remove-slot')) {
+        const slotForm = e.target.closest('.alternative-slot-form');
+        slotForm.remove();
+        slotCounter--;
+        
+        // Show add button if below max slots
+        if (slotCounter < 5) {
+            document.getElementById('add-slot').style.display = 'block';
+        }
+        
+        // Update slot numbers
+        const remainingSlots = document.querySelectorAll('.alternative-slot-form');
+        remainingSlots.forEach((slot, index) => {
+            const newIndex = index + 1;
+            slot.setAttribute('data-slot', newIndex);
+            slot.querySelector('h6').textContent = `Alternative Slot #${newIndex}`;
+            
+            const inputs = slot.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                const name = input.name;
+                if (name) {
+                    input.name = name.replace(/_\d+$/, `_${newIndex}`);
+                }
+            });
+        });
+        
+        slotCounter = remainingSlots.length;
+    }
+});
+
+// Check availability when date/time changes
+document.addEventListener('change', function(e) {
+    if (e.target.type === 'date' || e.target.type === 'time') {
+        checkSlotAvailability(e.target.closest('.alternative-slot-form'));
+    }
+});
+
+function checkSlotAvailability(slotForm) {
+    const date = slotForm.querySelector('input[type="date"]').value;
+    const time = slotForm.querySelector('input[type="time"]').value;
+    const duration = slotForm.querySelector('select').value;
+    
+    if (date && time && duration) {
+        // Add visual feedback for availability check
+        const feedback = slotForm.querySelector('.availability-feedback') || 
+                        document.createElement('div');
+        feedback.className = 'availability-feedback mt-2';
+        feedback.innerHTML = '<small class="text-info"><i class="fas fa-spinner fa-spin"></i> Checking availability...</small>';
+        
+        if (!slotForm.querySelector('.availability-feedback')) {
+            slotForm.appendChild(feedback);
+        }
+        
+        // Simulate availability check (replace with actual AJAX call)
+        setTimeout(() => {
+            const isAvailable = Math.random() > 0.3; // 70% chance available
+            if (isAvailable) {
+                feedback.innerHTML = '<small class="text-success"><i class="fas fa-check"></i> Slot available</small>';
+            } else {
+                feedback.innerHTML = '<small class="text-warning"><i class="fas fa-exclamation-triangle"></i> Slot may be conflicted</small>';
+            }
+        }, 1000);
+    }
+}
+</script>
+{% endblock %}

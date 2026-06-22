@@ -1,0 +1,342 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Recycle Record - Library System{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+    .delete-card {
+        border: none;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        border-radius: 15px;
+    }
+    .card-header {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+        border-radius: 15px 15px 0 0 !important;
+        border: none;
+    }
+    .info-card {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 10px;
+        border: 2px solid #e9ecef;
+    }
+    .warning-card {
+        background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+        border: 2px solid #ffc107;
+        border-radius: 10px;
+    }
+    .danger-card {
+        background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+        border: 2px solid #dc3545;
+        border-radius: 10px;
+    }
+    .btn-delete-confirm {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        border: none;
+        border-radius: 25px;
+        padding: 10px 30px;
+        color: white;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    .btn-delete-confirm:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+        color: white;
+    }
+    .consequence-item {
+        border-left: 4px solid #dc3545;
+        padding-left: 15px;
+        margin-bottom: 10px;
+        background: rgba(220, 53, 69, 0.1);
+        padding: 10px 15px;
+        border-radius: 5px;
+    }
+    .data-row {
+        padding: 8px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .data-row:last-child {
+        border-bottom: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <h2><i class="fas fa-trash-alt text-danger"></i> Delete Recycle Record</h2>
+                <p class="text-muted">Permanently remove this recycling record from the system</p>
+            </div>
+
+            <!-- Item Information Card -->
+            <div class="card info-card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-book text-primary"></i> Record Information</h5>
+                    <div class="row">                        <div class="col-md-6">
+                            <div class="data-row">
+                                <strong>Book Title:</strong><br>
+                                <span class="text-muted">
+                                    {% if recycle.book %}
+                                        {{ recycle.book.title_of_book }}
+                                    {% else %}
+                                        {{ recycle.title|default:"Unknown Title" }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="data-row">
+                                <strong>Author:</strong><br>
+                                <span class="text-muted">
+                                    {% if recycle.book %}
+                                        {{ recycle.book.author.name }}
+                                    {% else %}
+                                        Unknown Author
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="data-row">
+                                <strong>ISBN:</strong><br>
+                                <span class="text-muted">{{ recycle.book_id_isbn }}</span>
+                            </div>
+                            <div class="data-row">
+                                <strong>Publisher:</strong><br>
+                                <span class="text-muted">
+                                    {% if recycle.book %}
+                                        {{ recycle.book.publisher.name }}
+                                    {% else %}
+                                        Unknown Publisher
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">                            <div class="data-row">
+                                <strong>Recycled Date:</strong><br>
+                                <span class="text-muted">{{ recycle.date|date:"M d, Y" }}</span>
+                            </div>
+                            <div class="data-row">
+                                <strong>Recycled By:</strong><br>
+                                <span class="text-muted">{{ recycle.recycled_by.get_full_name|default:recycle.recycled_by.username }}</span>
+                            </div>
+                            <div class="data-row">
+                                <strong>Current Status:</strong><br>
+                                <span class="badge {% if recycle.status == 'disposed' %}bg-success{% else %}bg-warning{% endif %}">
+                                    {{ recycle.get_status_display }}
+                                </span>
+                            </div>                            <div class="data-row">
+                                <strong>Reason:</strong><br>
+                                <span class="text-muted">{{ recycle.get_reason_display }}</span>
+                            </div>
+                        </div>
+                    </div>
+                      {% if recycle.description %}
+                    <div class="mt-3">
+                        <strong>Notes:</strong><br>
+                        <p class="text-muted mb-0">{{ recycle.description }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Financial Information (if available) -->
+            {% if recycle.estimated_value or recycle.recycling_cost or recycle.disposal_date %}
+            <div class="card warning-card mb-4">
+                <div class="card-body">
+                    <h6><i class="fas fa-dollar-sign"></i> Financial & Disposal Information</h6>
+                    <div class="row">
+                        {% if recycle.estimated_value %}
+                        <div class="col-md-4">
+                            <strong>Estimated Value:</strong><br>
+                            <span class="text-success">${{ recycle.estimated_value }}</span>
+                        </div>
+                        {% endif %}
+                        {% if recycle.recycling_cost %}
+                        <div class="col-md-4">
+                            <strong>Recycling Cost:</strong><br>
+                            <span class="text-danger">${{ recycle.recycling_cost }}</span>
+                        </div>
+                        {% endif %}
+                        {% if recycle.total_cost %}
+                        <div class="col-md-4">
+                            <strong>Total Cost Impact:</strong><br>
+                            <span class="text-info">${{ recycle.total_cost }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% if recycle.disposal_date %}
+                    <div class="mt-2">
+                        <strong>Disposal Date:</strong> {{ recycle.disposal_date|date:"M d, Y" }}
+                        {% if recycle.disposal_method %}
+                        | <strong>Method:</strong> {{ recycle.disposal_method }}
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% if recycle.disposal_notes %}
+                    <div class="mt-2">
+                        <strong>Disposal Notes:</strong><br>
+                        <span class="text-muted">{{ recycle.disposal_notes }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Consequences Warning -->
+            <div class="card danger-card mb-4">
+                <div class="card-body">
+                    <h6><i class="fas fa-exclamation-triangle"></i> Deletion Consequences</h6>
+                    <p class="mb-3">Deleting this record will have the following permanent effects:</p>
+                    
+                    <div class="consequence-item">
+                        <i class="fas fa-database text-danger"></i>
+                        <strong>Record Removal:</strong> This recycling record will be permanently deleted from the database
+                    </div>
+                    
+                    <div class="consequence-item">
+                        <i class="fas fa-book text-danger"></i>
+                        <strong>Book Status:</strong> The book's status will remain as "Recycled" - it will NOT be restored to inventory
+                    </div>
+                    
+                    {% if recycle.estimated_value or recycle.recycling_cost %}
+                    <div class="consequence-item">
+                        <i class="fas fa-chart-line text-danger"></i>
+                        <strong>Financial Data:</strong> All associated financial records (${{ recycle.total_cost|default:"0.00" }}) will be lost
+                    </div>
+                    {% endif %}
+                    
+                    <div class="consequence-item">
+                        <i class="fas fa-history text-danger"></i>
+                        <strong>Audit Trail:</strong> Historical tracking information will be permanently lost
+                    </div>
+                    
+                    <div class="consequence-item">
+                        <i class="fas fa-chart-bar text-danger"></i>
+                        <strong>Reports:</strong> This record will no longer appear in recycling reports and statistics
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alternative Actions -->
+            <div class="alert alert-info mb-4">
+                <h6><i class="fas fa-lightbulb"></i> Consider These Alternatives</h6>
+                <p class="mb-2">Instead of deleting, you might want to:</p>
+                <ul class="mb-0">
+                    <li><strong>Cancel the recycle:</strong> This will restore the book to active inventory</li>
+                    <li><strong>Update the record:</strong> Modify the information instead of deleting</li>
+                    <li><strong>Mark as disposed:</strong> Complete the recycling process properly</li>
+                </ul>
+                <div class="mt-3">                    <a href="{% url 'core:cancel_recycle' recycle.id %}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-undo"></i> Cancel Recycle
+                    </a>
+                    <a href="{% url 'core:update_recycle' recycle.id %}" class="btn btn-info btn-sm">
+                        <i class="fas fa-edit"></i> Update Record
+                    </a>
+                    {% if recycle.status != 'disposed' %}
+                    <a href="{% url 'core:mark_disposed' recycle.id %}" class="btn btn-success btn-sm">
+                        <i class="fas fa-check"></i> Mark Disposed
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Confirmation Form -->
+            <div class="card delete-card">
+                <div class="card-header text-center">
+                    <h4><i class="fas fa-exclamation-triangle"></i> Final Confirmation</h4>
+                </div>
+                <div class="card-body p-4 text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-trash-alt" style="font-size: 4rem; color: #dc3545; opacity: 0.3;"></i>
+                    </div>
+                    
+                    <h5 class="text-danger mb-3">This action cannot be undone!</h5>                    <p class="mb-4">
+                        You are about to permanently delete the recycling record for 
+                        <strong>"{% if recycle.book %}{{ recycle.book.title_of_book }}{% else %}{{ recycle.title|default:"Unknown Title" }}{% endif %}"</strong>.
+                        This will remove all associated data from the system.
+                    </p>
+
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" id="confirmDelete" required>
+                        <label class="form-check-label text-danger" for="confirmDelete">
+                            <strong>I understand this action cannot be undone and want to proceed with deletion</strong>
+                        </label>
+                    </div>
+
+                    <form method="post" class="d-inline" id="deleteForm">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                            <button type="submit" class="btn btn-delete-confirm" id="deleteButton" disabled>
+                                <i class="fas fa-trash"></i> Yes, Delete Permanently
+                            </button>
+                            <a href="{% url 'core:recycle_detail' recycle.id %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Final Warning -->
+            <div class="alert alert-danger mt-4">
+                <h6><i class="fas fa-skull-crossbones"></i> Last Warning</h6>
+                <p class="mb-0">
+                    <strong>This is a destructive action.</strong> Once you confirm deletion, the record and all 
+                    associated data will be permanently removed from the system. Make absolutely sure this is 
+                    what you want to do.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmCheckbox = document.getElementById('confirmDelete');
+    const deleteButton = document.getElementById('deleteButton');
+    const deleteForm = document.getElementById('deleteForm');
+    
+    // Enable/disable delete button based on checkbox
+    confirmCheckbox.addEventListener('change', function() {
+        deleteButton.disabled = !this.checked;
+        if (this.checked) {
+            deleteButton.classList.remove('btn-secondary');
+            deleteButton.classList.add('btn-delete-confirm');
+        } else {
+            deleteButton.classList.remove('btn-delete-confirm');
+            deleteButton.classList.add('btn-secondary');
+        }
+    });
+    
+    // Final confirmation before submission
+    deleteForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!confirmCheckbox.checked) {
+            alert('Please confirm that you understand this action cannot be undone.');
+            return false;
+        }
+        
+        // Triple confirmation for this critical action
+        if (confirm('FINAL WARNING: Are you absolutely certain you want to permanently delete this record?\n\nThis action CANNOT be undone!')) {
+            if (confirm('Last chance: Click OK to permanently delete, or Cancel to abort.')) {
+                // Add a delay to prevent accidental double-clicks
+                deleteButton.disabled = true;
+                deleteButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+                
+                setTimeout(() => {
+                    this.submit();
+                }, 1000);
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

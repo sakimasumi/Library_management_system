@@ -1,0 +1,552 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ room.room_name }} - Room Details{% endblock %}
+
+{% block extra_css %}
+<style>
+.cursor-pointer {
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+}
+
+.cursor-pointer:hover {
+    opacity: 0.9;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-building me-2 text-primary"></i>
+                    {{ room.room_name }}
+                    <span class="badge bg-secondary ms-2">{{ room.room_number }}</span>
+                </h1>
+                <div>
+                    <a href="{% url 'room_management:room_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Rooms
+                    </a>
+                    <a href="{% url 'room_management:update_room' room.room_id %}" class="btn btn-warning">
+                        <i class="bi bi-pencil me-2"></i>Edit Room
+                    </a>
+                    {% if room.status == 'available' %}
+                        <a href="{% url 'room_management:book_room' %}?room={{ room.room_id }}" class="btn btn-success">
+                            <i class="bi bi-calendar-plus me-2"></i>Book Room
+                        </a>
+                    {% endif %}
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-info dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="bi bi-gear me-2"></i>Actions
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'room_management:manage_room_equipment' room.room_id %}">
+                                <i class="bi bi-tools me-2"></i>Manage Equipment
+                            </a></li>                            <li><a class="dropdown-item" href="{% url 'room_management:schedule_room_maintenance' room.room_id %}">
+                                <i class="bi bi-wrench me-2"></i>Schedule Maintenance
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'room_management:delete_room' room.room_id %}">
+                                <i class="bi bi-trash me-2"></i>Delete Room
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Room Status Alert -->
+    <div class="row mb-4">
+        <div class="col-12">
+            {% if room.status == 'available' and room.is_available_now %}
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <strong>Available Now</strong> - This room is ready for immediate use
+                </div>
+            {% elif room.status == 'available' and not room.is_available_now %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-clock-fill me-2"></i>
+                    <strong>Currently Booked</strong> - Room is available but has active bookings
+                </div>
+            {% elif room.status == 'occupied' %}
+                <div class="alert alert-info">
+                    <i class="bi bi-people-fill me-2"></i>
+                    <strong>Currently Occupied</strong> - Room is being used
+                </div>
+            {% elif room.status == 'maintenance' %}
+                <div class="alert alert-danger">
+                    <i class="bi bi-tools me-2"></i>
+                    <strong>Under Maintenance</strong> - Room is temporarily unavailable
+                </div>
+            {% elif room.status == 'reserved' %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-bookmark-fill me-2"></i>
+                    <strong>Reserved</strong> - Room is reserved for special use
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Room Information -->
+    <div class="row">
+        <!-- Left Column - Room Details -->
+        <div class="col-lg-8">
+            <!-- Basic Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Room Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold">Room Type:</td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ room.get_room_type_display }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Capacity:</td>
+                                    <td>
+                                        <i class="bi bi-people me-1"></i>{{ room.capacity }} people
+                                    </td>
+                                </tr>                                <tr>
+                                    <td class="fw-bold">Location:</td>
+                                    <td>
+                                        <i class="bi bi-geo-alt me-1"></i>{{ room.location }}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold">Status:</td>
+                                    <td>
+                                        {% if room.status == 'available' %}
+                                            <span class="badge bg-success">{{ room.get_status_display }}</span>
+                                        {% elif room.status == 'occupied' %}
+                                            <span class="badge bg-warning">{{ room.get_status_display }}</span>
+                                        {% elif room.status == 'maintenance' %}
+                                            <span class="badge bg-danger">{{ room.get_status_display }}</span>
+                                        {% else %}
+                                            <span class="badge bg-info">{{ room.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Active:</td>
+                                    <td>
+                                        {% if room.is_active %}
+                                            <span class="badge bg-success">Yes</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">No</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Created:</td>
+                                    <td>{{ room.created_at|date:"M d, Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Last Updated:</td>
+                                    <td>{{ room.updated_at|date:"M d, Y g:i A" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                      {% if room.facilities %}
+                        <hr>
+                        <h6>Facilities & Amenities</h6>
+                        <p class="mb-0">{{ room.facilities|linebreaks }}</p>
+                    {% endif %}
+                    
+                    {% if room.description %}
+                        <hr>
+                        <h6>Description</h6>
+                        <p class="mb-0">{{ room.description|linebreaks }}</p>
+                    {% endif %}
+                </div>
+            </div>            <!-- Room Cover Image -->
+            {% if room.cover_image %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Room Image</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="position-relative d-inline-block">
+                        <img src="{{ room.cover_image.url }}" alt="{{ room.room_name }}" 
+                             class="img-fluid rounded cursor-pointer" 
+                             style="max-height: 400px; width: 100%; object-fit: cover;"
+                             onclick="showImageModal('{{ room.cover_image.url }}', '{{ room.room_name|escapejs }}')">
+                        <div class="position-absolute top-0 end-0 m-2">
+                            <button type="button" class="btn btn-sm btn-light btn-outline-dark" 
+                                    onclick="showImageModal('{{ room.cover_image.url }}', '{{ room.room_name|escapejs }}')" 
+                                    title="View full size">
+                                <i class="bi bi-arrows-fullscreen"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Equipment List -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Equipment ({{ equipment.count }})</h5>
+                    <a href="{% url 'room_management:add_equipment' room.room_id %}" class="btn btn-sm btn-success">
+                        <i class="bi bi-plus"></i> Add Equipment
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if equipment %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Equipment</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Last Maintenance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in equipment %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ item.equipment_name }}</strong>
+                                            {% if item.model_number %}
+                                                <br><small class="text-muted">{{ item.model_number }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ item.get_equipment_type_display }}</td>
+                                        <td>
+                                            {% if item.status == 'working' %}
+                                                <span class="badge bg-success">{{ item.get_status_display }}</span>
+                                            {% elif item.status == 'broken' %}
+                                                <span class="badge bg-danger">{{ item.get_status_display }}</span>
+                                            {% elif item.status == 'maintenance' %}
+                                                <span class="badge bg-warning">{{ item.get_status_display }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ item.get_status_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ item.last_maintenance|date:"M d, Y"|default:"Never" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-tools display-4 text-muted"></i>
+                            <p class="text-muted mt-2">No equipment registered for this room</p>
+                            <a href="{% url 'room_management:add_equipment' room.room_id %}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-2"></i>Add First Equipment
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Bookings -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Bookings</h5>
+                    <a href="{% url 'room_management:room_bookings' %}?room={{ room.room_id }}" class="btn btn-sm btn-outline-primary">
+                        View All Bookings
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if recent_bookings %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date & Time</th>
+                                        <th>Purpose</th>
+                                        <th>Booked By</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for booking in recent_bookings %}
+                                    <tr>
+                                        <td>
+                                            <div>
+                                                <strong>{{ booking.booking_date|date:"M d, Y" }}</strong><br>
+                                                <small class="text-muted">{{ booking.start_time|time:"g:i A" }} - {{ booking.end_time|time:"g:i A" }}</small>
+                                            </div>
+                                        </td>
+                                        <td>{{ booking.purpose|truncatechars:30 }}</td>
+                                        <td>{{ booking.booked_by.get_full_name|default:booking.booked_by.username }}</td>
+                                        <td>
+                                            {% if booking.status == 'confirmed' %}
+                                                <span class="badge bg-success">{{ booking.get_status_display }}</span>
+                                            {% elif booking.status == 'pending' %}
+                                                <span class="badge bg-warning">{{ booking.get_status_display }}</span>
+                                            {% elif booking.status == 'cancelled' %}
+                                                <span class="badge bg-danger">{{ booking.get_status_display }}</span>
+                                            {% else %}
+                                                <span class="badge bg-info">{{ booking.get_status_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if booking.status == 'pending' %}
+                                                <a href="{% url 'room_management:approve_booking' booking.booking_id %}" 
+                                                   class="btn btn-sm btn-success">
+                                                    <i class="bi bi-check"></i>
+                                                </a>
+                                            {% endif %}
+                                            {% if booking.status in 'pending,confirmed' and booking.is_upcoming %}
+                                                <a href="{% url 'room_management:cancel_booking' booking.booking_id %}" 
+                                                   class="btn btn-sm btn-danger">
+                                                    <i class="bi bi-x"></i>
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-calendar-x display-4 text-muted"></i>
+                            <p class="text-muted mt-2">No recent bookings for this room</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Quick Info & Actions -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if room.status == 'available' %}
+                            <a href="{% url 'room_management:book_room' %}?room={{ room.room_id }}" 
+                               class="btn btn-success">
+                                <i class="bi bi-calendar-plus me-2"></i>Book This Room
+                            </a>
+                        {% endif %}
+                        
+                        <a href="{% url 'room_management:manage_room_equipment' room.room_id %}" 
+                           class="btn btn-outline-primary">
+                            <i class="bi bi-tools me-2"></i>Manage Equipment
+                        </a>
+                          <a href="{% url 'room_management:schedule_room_maintenance' room.room_id %}" 
+                           class="btn btn-outline-warning">
+                            <i class="bi bi-wrench me-2"></i>Schedule Maintenance
+                        </a>
+                        
+                        <button class="btn btn-outline-info" onclick="viewSchedule()">
+                            <i class="bi bi-calendar me-2"></i>View Schedule
+                        </button>
+                        
+                        <hr>
+                        
+                        <a href="{% url 'room_management:update_room' room.room_id %}" 
+                           class="btn btn-outline-secondary">
+                            <i class="bi bi-pencil me-2"></i>Edit Room Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Room Statistics -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Room Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h4 class="text-primary">{{ recent_bookings.count }}</h4>
+                                <small class="text-muted">Recent Bookings</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-success">{{ equipment.count }}</h4>
+                            <small class="text-muted">Equipment Items</small>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h4 class="text-warning">{{ maintenance_records.count }}</h4>
+                                <small class="text-muted">Maintenance Records</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-info">
+                                {% if room.is_available_now %}
+                                    <i class="bi bi-check-circle text-success"></i>
+                                {% else %}
+                                    <i class="bi bi-x-circle text-danger"></i>
+                                {% endif %}
+                            </h4>
+                            <small class="text-muted">Available Now</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Maintenance History -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Maintenance</h5>
+                </div>
+                <div class="card-body">
+                    {% if maintenance_records %}
+                        {% for maintenance in maintenance_records %}
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="me-3">
+                                    {% if maintenance.is_completed %}
+                                        <i class="bi bi-check-circle text-success"></i>
+                                    {% else %}
+                                        <i class="bi bi-clock text-warning"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold">{{ maintenance.get_maintenance_type_display }}</div>
+                                    <small class="text-muted">
+                                        {{ maintenance.scheduled_date|date:"M d, Y" }}
+                                        {% if maintenance.is_completed %}
+                                            - Completed
+                                        {% else %}
+                                            - Scheduled
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        <a href="{% url 'room_management:manage_maintenance' %}?room={{ room.room_id }}" 
+                           class="btn btn-sm btn-outline-primary w-100">
+                            View All Maintenance
+                        </a>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="bi bi-wrench display-6 text-muted"></i>
+                            <p class="text-muted small mt-2">No maintenance records</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Schedule Modal -->
+<div class="modal fade" id="scheduleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ room.room_name }} - Schedule</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="calendar"></div>
+            </div>        </div>
+    </div>
+</div>
+
+<!-- Image Modal for Full Size View -->
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalTitle">Room Image</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center p-0">
+                <img id="modalImage" src="" alt="" class="img-fluid w-100" style="max-height: 80vh; object-fit: contain;">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a id="downloadImageBtn" href="" download class="btn btn-primary">
+                    <i class="bi bi-download me-2"></i>Download Image
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function viewSchedule() {
+    // Load room schedule
+    fetch(`{% url 'room_management:get_room_schedule' room.room_id %}`)
+        .then(response => response.json())
+        .then(data => {
+            displaySchedule(data.events);
+            new bootstrap.Modal(document.getElementById('scheduleModal')).show();
+        })
+        .catch(error => {
+            console.error('Error loading schedule:', error);
+            alert('Error loading room schedule');
+        });
+}
+
+function displaySchedule(events) {
+    const calendarDiv = document.getElementById('calendar');
+    
+    // Simple calendar display (you can integrate FullCalendar.js for better UI)
+    let html = '<div class="table-responsive"><table class="table table-sm">';
+    html += '<thead><tr><th>Date</th><th>Time</th><th>Purpose</th><th>Status</th></tr></thead><tbody>';
+    
+    if (events.length === 0) {
+        html += '<tr><td colspan="4" class="text-center text-muted">No upcoming bookings</td></tr>';
+    } else {
+        events.forEach(event => {
+            const startDate = new Date(event.start);
+            const endDate = new Date(event.end);
+            
+            html += `<tr>
+                <td>${startDate.toLocaleDateString()}</td>
+                <td>${startDate.toLocaleTimeString()} - ${endDate.toLocaleTimeString()}</td>
+                <td>${event.title}</td>
+                <td><span class="badge bg-${event.status === 'confirmed' ? 'success' : 'warning'}">${event.status}</span></td>
+            </tr>`;
+        });
+    }
+    
+    html += '</tbody></table></div>';
+    calendarDiv.innerHTML = html;
+}
+
+function showImageModal(imageUrl, imageTitle) {
+    const modal = document.getElementById('imageModal');
+    const modalImage = document.getElementById('modalImage');
+    const modalTitle = document.getElementById('imageModalTitle');
+    const downloadBtn = document.getElementById('downloadImageBtn');
+    
+    modalImage.src = imageUrl;
+    modalImage.alt = imageTitle;
+    modalTitle.textContent = imageTitle + ' - Full Size';
+    
+    // Set download link
+    const filename = imageTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '_image.jpg';
+    downloadBtn.href = imageUrl;
+    downloadBtn.download = filename;
+    
+    new bootstrap.Modal(modal).show();
+}
+</script>
+{% endblock %}

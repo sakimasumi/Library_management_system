@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Maintenance Details - {{ maintenance.room.room_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'room_management:manage_maintenance' %}">Maintenance</a></li>
+                            <li class="breadcrumb-item active">View Details</li>
+                        </ol>
+                    </nav>
+                    <h1>
+                        <i class="bi bi-eye me-2 text-info"></i>
+                        Maintenance Details
+                    </h1>
+                    <p class="text-muted">Maintenance ID: #{{ maintenance.maintenance_id|stringformat:"05d" }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'room_management:manage_maintenance' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to List
+                    </a>
+                    {% if not maintenance.is_completed %}
+                        <a href="{% url 'room_management:edit_maintenance' maintenance.maintenance_id %}" class="btn btn-warning">
+                            <i class="bi bi-pencil me-2"></i>Edit
+                        </a>
+                        <a href="{% url 'room_management:complete_maintenance' maintenance.maintenance_id %}" class="btn btn-success">
+                            <i class="bi bi-check-circle me-2"></i>Mark Complete
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Maintenance Details -->
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Basic Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Basic Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted fw-medium">Room:</td>
+                                    <td>
+                                        <a href="{% url 'room_management:room_detail' maintenance.room.room_id %}" class="text-decoration-none">
+                                            <strong>{{ maintenance.room.room_name }}</strong>
+                                        </a>
+                                        <br><small class="text-muted">{{ maintenance.room.room_number }}</small>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium">Type:</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ maintenance.get_maintenance_type_display }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium">Scheduled Date:</td>
+                                    <td class="fw-medium">{{ maintenance.scheduled_date|date:"M d, Y" }}</td>
+                                </tr>
+                            </table>
+                        </div>                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted fw-medium">Performed By:</td>
+                                    <td>{{ maintenance.performed_by|default:"Not assigned" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium">Cost:</td>
+                                    <td>
+                                        {% if maintenance.cost > 0 %}
+                                            <span class="fw-medium text-primary">${{ maintenance.cost|floatformat:2 }}</span>
+                                        {% else %}
+                                            <span class="text-muted">Free</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium">Status:</td>
+                                    <td>
+                                        {% if maintenance.is_completed %}
+                                            <span class="badge bg-success">Completed</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium">Created:</td>
+                                    <td>{{ maintenance.created_at|date:"M d, Y g:i A" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    {% if maintenance.description %}
+                        <hr>
+                        <h6 class="text-muted">Description:</h6>
+                        <p class="mb-0">{{ maintenance.description|linebreaks }}</p>
+                    {% endif %}
+                    
+                    {% if maintenance.notes %}
+                        <hr>
+                        <h6 class="text-muted">Notes:</h6>
+                        <p class="mb-0">{{ maintenance.notes|linebreaks }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if maintenance.is_completed %}
+            <!-- Completion Details -->
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-check-circle me-2"></i>
+                        Completion Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Completed Date:</strong><br>
+                            {{ maintenance.completed_date|date:"M d, Y" }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Created By:</strong><br>
+                            {{ maintenance.created_by.get_full_name|default:maintenance.created_by.username }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightning me-2"></i>
+                        Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'room_management:room_detail' maintenance.room.room_id %}" class="btn btn-outline-primary">
+                            <i class="bi bi-building me-2"></i>View Room
+                        </a>
+                        {% if not maintenance.is_completed %}
+                            <a href="{% url 'room_management:edit_maintenance' maintenance.maintenance_id %}" class="btn btn-outline-warning">
+                                <i class="bi bi-pencil me-2"></i>Edit Details
+                            </a>
+                            <a href="{% url 'room_management:complete_maintenance' maintenance.maintenance_id %}" class="btn btn-outline-success">
+                                <i class="bi bi-check-circle me-2"></i>Mark Complete
+                            </a>
+                            <hr>
+                            <a href="{% url 'room_management:delete_maintenance' maintenance.maintenance_id %}" class="btn btn-outline-danger">
+                                <i class="bi bi-trash me-2"></i>Delete
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Room Information -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-building me-2"></i>
+                        Room Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <td class="text-muted">Name:</td>
+                            <td class="fw-medium">{{ maintenance.room.room_name }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Number:</td>
+                            <td>{{ maintenance.room.room_number }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Type:</td>
+                            <td>{{ maintenance.room.get_room_type_display }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Status:</td>
+                            <td>
+                                {% if maintenance.room.status == 'available' %}
+                                    <span class="badge bg-success">Available</span>
+                                {% elif maintenance.room.status == 'maintenance' %}
+                                    <span class="badge bg-warning">Under Maintenance</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ maintenance.room.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

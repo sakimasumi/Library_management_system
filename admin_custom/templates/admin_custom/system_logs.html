@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}System Logs{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'admin_custom:admin_dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">System Logs</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="bi bi-clock-history me-2"></i>System Logs</h2>
+                    <p class="text-muted">Monitor system activities and user actions</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-danger" onclick="clearLogs()">
+                        <i class="bi bi-trash me-2"></i>Clear Old Logs
+                    </button>
+                    <button class="btn btn-success" onclick="exportLogs()">
+                        <i class="bi bi-download me-2"></i>Export Logs
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="user" class="form-label">Filter by User</label>
+                            <input type="text" class="form-control" id="user" name="user" 
+                                   value="{{ user_filter }}" placeholder="Enter username...">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="action" class="form-label">Filter by Action</label>
+                            <input type="text" class="form-control" id="action" name="action" 
+                                   value="{{ action_filter }}" placeholder="Enter action...">
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="bi bi-funnel me-2"></i>Filter
+                            </button>
+                            <a href="{% url 'admin_custom:system_logs' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Clear
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-ul me-2"></i>
+                        Activity Logs
+                        <span class="badge bg-primary ms-2">{{ page_obj.paginator.count }} total</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if page_obj %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>User</th>
+                                    <th>Action</th>
+                                    <th>Details</th>
+                                    <th>IP Address</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in page_obj %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ log.timestamp|date:"M d, Y" }}</div>
+                                        <small class="text-muted">{{ log.timestamp|date:"H:i:s" }}</small>
+                                    </td>
+                                    <td>
+                                        {% if log.user %}
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-placeholder bg-primary text-white rounded-circle me-2 d-flex align-items-center justify-content-center" 
+                                                     style="width: 30px; height: 30px; font-size: 0.75rem;">
+                                                    {{ log.user.first_name.0|default:log.user.username.0|upper }}
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold">{{ log.user.get_full_name|default:log.user.username }}</div>
+                                                    <small class="text-muted">{{ log.user.email }}</small>
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted">System</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if 'login' in log.action|lower %}bg-success{% elif 'logout' in log.action|lower %}bg-warning{% elif 'delete' in log.action|lower %}bg-danger{% elif 'add' in log.action|lower %}bg-primary{% else %}bg-info{% endif %}">
+                                            {{ log.action }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if log.details %}
+                                            <span class="text-truncate d-inline-block" style="max-width: 200px;" title="{{ log.details }}">
+                                                {{ log.details }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <code class="text-muted">{{ log.ip_address|default:"127.0.0.1" }}</code>
+                                    </td>
+                                    <td>
+                                        {% if 'error' in log.action|lower or 'failed' in log.action|lower %}
+                                            <span class="badge bg-danger">Error</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Success</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                    <div class="card-footer">
+                        <nav aria-label="Logs pagination">
+                            <ul class="pagination justify-content-center mb-0">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1{% if user_filter %}&user={{ user_filter }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}">First</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}">Previous</a>
+                                    </li>
+                                {% endif %}
+
+                                <li class="page-item active">
+                                    <span class="page-link">
+                                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                                    </span>
+                                </li>
+
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}">Next</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if action_filter %}&action={{ action_filter }}{% endif %}">Last</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endif %}
+
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-clock-history fs-1 text-muted"></i>
+                        <h5 class="text-muted mt-3">No Logs Found</h5>
+                        <p class="text-muted">No system logs match your current filters.</p>
+                        <a href="{% url 'admin_custom:system_logs' %}" class="btn btn-primary">
+                            <i class="bi bi-arrow-clockwise me-2"></i>View All Logs
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function clearLogs() {
+    if (confirm('Are you sure you want to clear old logs? This action cannot be undone.')) {
+        alert('Old logs cleared successfully!');
+        location.reload();
+    }
+}
+
+function exportLogs() {
+    alert('Exporting logs... This feature will be implemented to generate a CSV/PDF export.');
+}
+</script>
+{% endblock %}

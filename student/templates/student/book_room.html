@@ -1,0 +1,342 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Book Room - {{ room.room_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'student:student_dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'student:view_rooms' %}">Rooms</a></li>
+                    <li class="breadcrumb-item active">Book {{ room.room_name }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-calendar-plus me-2"></i>Book Room</h2>
+            <p class="text-muted">Reserve {{ room.room_name }} for your study session</p>
+        </div>
+    </div>
+
+    <!-- Room Info & Booking Form -->
+    <div class="row">
+        <!-- Room Information -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-door-open me-2"></i>{{ room.room_name }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Room Number:</strong> {{ room.room_number }}<br>
+                        <strong>Type:</strong> {{ room.get_room_type_display }}<br>
+                        <strong>Capacity:</strong> {{ room.capacity }} people<br>
+                        <strong>Location:</strong> {{ room.location }}
+                    </div>
+                    
+                    {% if room.facilities %}
+                    <div class="mb-3">
+                        <strong>Facilities:</strong>
+                        <p class="text-muted">{{ room.facilities }}</p>
+                    </div>
+                    {% endif %}
+                      <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <small>
+                            <strong>Booking Rules:</strong><br>
+                            • All rooms are free for students and professors<br>
+                            • Maximum 3 hours per booking<br>
+                            • Must be approved by staff<br>
+                            • Number of attendees cannot exceed room capacity<br>
+                            • Cancel at least 1 hour before start time
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Booking Form -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar-check me-2"></i>Booking Details
+                    </h5>
+                </div>                <div class="card-body">
+                    <form method="POST" id="bookingForm" data-room-capacity="{{ room.capacity }}">
+                        {% csrf_token %}
+                          <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="booking_date" class="form-label">
+                                    <i class="bi bi-calendar3 me-1"></i>Date <span class="text-danger">*</span>
+                                </label>
+                                <input type="date" class="form-control" id="booking_date" name="booking_date" 
+                                       min="{% now 'Y-m-d' %}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="start_time" class="form-label">
+                                    <i class="bi bi-clock me-1"></i>Start Time <span class="text-danger">*</span>
+                                </label>
+                                <input type="time" class="form-control" id="start_time" name="start_time" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="end_time" class="form-label">
+                                    <i class="bi bi-clock-fill me-1"></i>End Time <span class="text-danger">*</span>
+                                </label>
+                                <input type="time" class="form-control" id="end_time" name="end_time" required>
+                            </div>
+                        </div>
+
+                        <!-- Duration Display -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-hourglass-split me-1"></i>Duration
+                                </label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="durationDisplay" readonly>
+                                    <span class="input-group-text">hours</span>
+                                </div>
+                                <div class="form-text">Calculated automatically</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="attendees_count" class="form-label">
+                                    <i class="bi bi-people me-1"></i>Number of Attendees <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" class="form-control" id="attendees_count" name="attendees_count" 
+                                       min="1" max="{{ room.capacity }}" required>
+                                <div class="form-text">Room capacity: {{ room.capacity }} people</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label for="purpose" class="form-label">
+                                    <i class="bi bi-text-paragraph me-1"></i>Purpose <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="purpose" name="purpose" 
+                                       placeholder="e.g., Group study, Project meeting, Research" required>
+                            </div>
+                        </div>
+
+                        <!-- Special Requirements -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label for="special_requirements" class="form-label">
+                                    <i class="bi bi-gear me-1"></i>Special Requirements
+                                </label>
+                                <textarea class="form-control" id="special_requirements" name="special_requirements" rows="2" 
+                                          placeholder="Any special setup or equipment needs (optional)"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <label for="notes" class="form-label">
+                                    <i class="bi bi-sticky me-1"></i>Additional Notes
+                                </label>
+                                <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                          placeholder="Any other information or special requests"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Availability Check -->
+                        <div id="availabilityCheck" class="alert" style="display: none;">
+                            <div class="d-flex align-items-center">
+                                <div class="spinner-border spinner-border-sm me-2" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                Checking availability...
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="row">
+                            <div class="col-12 d-flex justify-content-between">
+                                <a href="{% url 'student:view_rooms' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left me-2"></i>Back to Rooms
+                                </a>
+                                <button type="submit" class="btn btn-primary" id="submitBtn">
+                                    <i class="bi bi-calendar-check me-2"></i>Submit Booking Request
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('bookingForm');
+    const dateInput = document.getElementById('booking_date');
+    const startTimeInput = document.getElementById('start_time');
+    const endTimeInput = document.getElementById('end_time');
+    const attendeesInput = document.getElementById('attendees_count');
+    const durationDisplay = document.getElementById('durationDisplay');
+    const availabilityDiv = document.getElementById('availabilityCheck');    const submitBtn = document.getElementById('submitBtn');
+    const roomCapacity = parseInt(form.dataset.roomCapacity);
+
+    // Calculate and display duration
+    function updateDuration() {
+        const startTime = startTimeInput.value;
+        const endTime = endTimeInput.value;
+        
+        if (startTime && endTime) {
+            const start = new Date(`2000-01-01T${startTime}:00`);
+            const end = new Date(`2000-01-01T${endTime}:00`);
+            
+            if (end > start) {
+                const diffMs = end - start;
+                const diffHours = diffMs / (1000 * 60 * 60);
+                durationDisplay.value = diffHours.toFixed(1);
+            } else {
+                durationDisplay.value = '';
+            }
+        } else {
+            durationDisplay.value = '';
+        }
+    }
+
+    // Validate capacity
+    function validateCapacity() {
+        const attendeesCount = parseInt(attendeesInput.value);
+        const capacityHelp = attendeesInput.nextElementSibling;
+        
+        if (attendeesCount > roomCapacity) {
+            attendeesInput.classList.add('is-invalid');
+            capacityHelp.className = 'form-text text-danger';
+            capacityHelp.textContent = `Exceeds room capacity! Maximum: ${roomCapacity} people`;
+            return false;
+        } else if (attendeesCount > 0) {
+            attendeesInput.classList.remove('is-invalid');
+            attendeesInput.classList.add('is-valid');
+            capacityHelp.className = 'form-text text-success';
+            capacityHelp.textContent = `✓ Within capacity limit (${roomCapacity} people)`;
+            return true;
+        } else {
+            attendeesInput.classList.remove('is-invalid', 'is-valid');
+            capacityHelp.className = 'form-text';
+            capacityHelp.textContent = `Room capacity: ${roomCapacity} people`;
+            return true;
+        }
+    }
+
+    // Check availability when inputs change
+    function checkAvailability() {
+        const date = dateInput.value;
+        const startTime = startTimeInput.value;
+        const endTime = endTimeInput.value;
+        
+        if (date && startTime && endTime && startTime < endTime) {
+            availabilityDiv.style.display = 'block';
+            availabilityDiv.className = 'alert alert-info';
+            availabilityDiv.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    Checking availability...
+                </div>
+            `;
+            
+            // AJAX call to check availability
+            fetch(`{% url 'student:check_room_availability_ajax' %}?room_id={{ room.room_id }}&date=${date}&start_time=${startTime}&end_time=${endTime}`)
+                .then(response => response.json())
+                .then(data => {                    if (data.available) {
+                        availabilityDiv.className = 'alert alert-success';
+                        availabilityDiv.innerHTML = `
+                            <i class="bi bi-check-circle me-2"></i>
+                            ${data.room_name} is available for the selected time slot.
+                        `;
+                        submitBtn.disabled = false;
+                    } else {
+                        availabilityDiv.className = 'alert alert-danger';
+                        let message = `${data.room_name} is not available for the selected time slot.`;
+                        let icon = 'bi-x-circle';
+                        
+                        if (data.maintenance_scheduled) {
+                            message = `${data.room_name} is scheduled for maintenance on this date.`;
+                            icon = 'bi-tools';
+                        } else if (data.conflicts_count > 0) {
+                            message = `${data.room_name} has ${data.conflicts_count} conflicting booking(s) for this time slot.`;
+                            icon = 'bi-calendar-x';
+                        }
+                        
+                        availabilityDiv.innerHTML = `
+                            <i class="bi ${icon} me-2"></i>
+                            ${message}
+                        `;
+                        submitBtn.disabled = true;
+                    }
+                })
+                .catch(error => {
+                    availabilityDiv.className = 'alert alert-warning';
+                    availabilityDiv.innerHTML = `
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Could not check availability. Please try again.
+                    `;
+                });
+        } else {
+            availabilityDiv.style.display = 'none';
+            submitBtn.disabled = false;
+        }
+    }
+
+    // Add event listeners
+    startTimeInput.addEventListener('change', function() {
+        updateDuration();
+        checkAvailability();
+    });
+    
+    endTimeInput.addEventListener('change', function() {
+        updateDuration();
+        checkAvailability();
+    });
+    
+    dateInput.addEventListener('change', checkAvailability);
+    attendeesInput.addEventListener('input', validateCapacity);
+
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const startTime = startTimeInput.value;
+        const endTime = endTimeInput.value;
+        const attendeesCount = parseInt(attendeesInput.value);
+        
+        // Check time validation
+        if (startTime && endTime && startTime >= endTime) {
+            e.preventDefault();
+            alert('End time must be after start time.');
+            return false;
+        }
+        
+        // Check capacity validation
+        if (attendeesCount > roomCapacity) {
+            e.preventDefault();
+            alert(`Number of attendees (${attendeesCount}) exceeds room capacity (${roomCapacity}).`);
+            return false;
+        }
+        
+        // Check if capacity validation passed
+        if (!validateCapacity()) {
+            e.preventDefault();
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

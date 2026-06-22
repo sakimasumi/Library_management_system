@@ -1,0 +1,128 @@
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'student_dashboard' %}active{% endif %}" 
+           href="{% url 'student:student_dashboard' %}">
+            <i class="bi bi-speedometer2 me-2"></i>Dashboard
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'browse_books' in request.resolver_match.url_name %}active{% endif %}" 
+           href="{% url 'student:browse_books' %}">
+            <i class="bi bi-book me-2"></i>Browse Books
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'borrowings' in request.resolver_match.url_name %}active{% endif %}" 
+           href="{% url 'student:my_borrowings' %}">
+            <i class="bi bi-journal-bookmark me-2"></i>My Borrowings
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'reservations' in request.resolver_match.url_name %}active{% endif %}" 
+           href="{% url 'student:my_reservations' %}">
+            <i class="bi bi-bookmark me-2"></i>My Reservations
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'rooms' in request.resolver_match.url_name %}active{% endif %}" 
+           href="{% url 'student:view_rooms' %}">
+            <i class="bi bi-door-open me-2"></i>Study Rooms
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'room_bookings' in request.resolver_match.url_name %}active{% endif %}" 
+           href="{% url 'student:my_room_bookings' %}">
+            <i class="bi bi-calendar-check me-2"></i>My Room Bookings
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'fines' in request.resolver_match.url_name %}active{% endif %}" 
+           href="{% url 'student:my_fines' %}">
+            <i class="bi bi-currency-dollar me-2"></i>My Fines
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'notifications' in request.resolver_match.url_name %}active{% endif %}" 
+           href="{% url 'student:notifications' %}">
+            <i class="bi bi-bell me-2"></i>Notifications
+            {% if unread_notifications_count > 0 %}
+                <span class="badge bg-danger ms-2">{{ unread_notifications_count }}</span>
+            {% endif %}
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'profile' in request.resolver_match.url_name %}active{% endif %}" 
+           href="{% url 'student:my_profile' %}">
+            <i class="bi bi-person me-2"></i>My Profile
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if 'change_password' in request.resolver_match.url_name %}active{% endif %}" 
+           href="{% url 'student:change_password' %}">
+            <i class="bi bi-lock me-2"></i>Change Password
+        </a>
+    </li>
+</ul>
+
+<!-- ✅ FIXED Quick Stats Section -->
+<div class="mt-4 p-3 bg-light rounded">
+    <h6 class="text-muted mb-3">
+        <i class="bi bi-graph-up me-2"></i>Quick Stats
+    </h6>
+    
+    {% if user.is_authenticated %}
+        {% if current_borrowings %}
+            <div class="mb-2">
+                <small class="text-muted">Books Borrowed:</small>
+                <strong class="float-end">{{ current_borrowings.count }}</strong>
+            </div>
+        {% else %}
+            <div class="mb-2">
+                <small class="text-muted">Books Borrowed:</small>
+                <strong class="float-end">0</strong>
+            </div>
+        {% endif %}
+        
+        {% if active_reservations %}
+            <div class="mb-2">
+                <small class="text-muted">Active Reservations:</small>
+                <strong class="float-end">{{ active_reservations.count }}</strong>
+            </div>
+        {% else %}
+            <div class="mb-2">
+                <small class="text-muted">Active Reservations:</small>
+                <strong class="float-end">0</strong>
+            </div>
+        {% endif %}
+        
+        {% if unpaid_fines %}
+            <div class="mb-2">
+                <small class="text-muted">Unpaid Fines:</small>
+                <strong class="float-end text-danger">
+                    ${% for fine in unpaid_fines %}{{ fine.amount|add:0 }}{% if not forloop.last %} + {% endif %}{% empty %}0.00{% endfor %}
+                </strong>
+            </div>
+        {% else %}
+            <div class="mb-2">
+                <small class="text-muted">Unpaid Fines:</small>
+                <strong class="float-end text-success">$0.00</strong>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-info alert-sm">
+            <small>
+                <i class="bi bi-info-circle me-1"></i>
+                Welcome to the Library System!
+            </small>
+        </div>
+    {% endif %}
+</div>

@@ -1,0 +1,606 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}User Details - {{ user.get_full_name|default:user.username }}{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12"><nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'admin_custom:admin_dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'admin_custom:manage_users' %}">Manage Users</a></li>
+                    <li class="breadcrumb-item active">{{ user.get_full_name|default:user.username }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- User Profile Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <div class="avatar-placeholder bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 80px; height: 80px; font-size: 2rem;">
+                                {{ user.first_name.0|default:user.username.0|upper }}
+                            </div>
+                        </div>
+                        <div class="col">
+                            <h2 class="mb-1">{{ user.get_full_name|default:user.username }}</h2>
+                            <p class="text-muted mb-2">
+                                <i class="bi bi-envelope me-2"></i>{{ user.email }}
+                            </p>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% if user.is_active %}
+                                    <span class="badge bg-success">Active User</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive User</span>
+                                {% endif %}
+                                
+                                {% if user.is_staff %}
+                                    <span class="badge bg-info">Staff Member</span>
+                                {% endif %}
+                                
+                                {% if user.is_superuser %}
+                                    <span class="badge bg-warning">Superuser</span>
+                                {% endif %}
+                                
+                                {% if member %}
+                                    <span class="badge bg-primary">Library Member</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <div class="btn-group">
+                                <button class="btn btn-outline-primary" onclick="editUser()">
+                                    <i class="bi bi-pencil me-2"></i>Edit User
+                                </button>
+                                {% if user.is_active %}
+                                    <button class="btn btn-outline-danger" onclick="toggleUserStatus('deactivate')">
+                                        <i class="bi bi-person-x me-2"></i>Deactivate
+                                    </button>
+                                {% else %}
+                                    <button class="btn btn-outline-success" onclick="toggleUserStatus('activate')">
+                                        <i class="bi bi-person-check me-2"></i>Activate
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Information Tabs -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" id="userTabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="profile-tab" data-bs-toggle="tab" href="#profile">
+                                <i class="bi bi-person me-2"></i>Profile Information
+                            </a>
+                        </li>
+                        {% if member %}
+                        <li class="nav-item">
+                            <a class="nav-link" id="borrowing-tab" data-bs-toggle="tab" href="#borrowing">
+                                <i class="bi bi-book me-2"></i>Borrowing History
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="fines-tab" data-bs-toggle="tab" href="#fines">
+                                <i class="bi bi-exclamation-triangle me-2"></i>Fines & Penalties
+                            </a>
+                        </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link" id="activity-tab" data-bs-toggle="tab" href="#activity">
+                                <i class="bi bi-clock-history me-2"></i>Activity Log
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content">
+                        <!-- Profile Information Tab -->
+                        <div class="tab-pane fade show active" id="profile">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5 class="mb-3">
+                                        <i class="bi bi-person-lines-fill me-2"></i>
+                                        Basic Information
+                                    </h5>
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <th width="30%">Username:</th>
+                                            <td>{{ user.username }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>First Name:</th>
+                                            <td>{{ user.first_name|default:"Not provided" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Last Name:</th>
+                                            <td>{{ user.last_name|default:"Not provided" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Email:</th>
+                                            <td>{{ user.email }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Date Joined:</th>
+                                            <td>{{ user.date_joined|date:"F d, Y H:i" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Last Login:</th>
+                                            <td>
+                                                {% if user.last_login %}
+                                                    {{ user.last_login|date:"F d, Y H:i" }}
+                                                {% else %}
+                                                    <span class="text-muted">Never logged in</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    {% if member %}
+                                    <h5 class="mb-3">
+                                        <i class="bi bi-card-text me-2"></i>
+                                        Member Information
+                                    </h5>
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <th width="30%">Member ID:</th>
+                                            <td><span class="badge bg-primary">{{ member.member_id }}</span></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Member Type:</th>
+                                            <td>{{ member.member_type }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Registration Date:</th>
+                                            <td>{{ member.registration_date|date:"F d, Y" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Phone:</th>
+                                            <td>{{ member.phone_number|default:"Not provided" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Address:</th>
+                                            <td>{{ member.address|default:"Not provided" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Status:</th>
+                                            <td>
+                                                {% if member.is_active %}
+                                                    <span class="badge bg-success">Active</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Inactive</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if member %}
+                        <!-- Borrowing History Tab -->
+                        <div class="tab-pane fade" id="borrowing">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-book me-2"></i>
+                                    Borrowing History
+                                </h5>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" onclick="filterBorrowings('all')">All</button>
+                                    <button class="btn btn-outline-warning" onclick="filterBorrowings('active')">Active</button>
+                                    <button class="btn btn-outline-success" onclick="filterBorrowings('returned')">Returned</button>
+                                    <button class="btn btn-outline-danger" onclick="filterBorrowings('overdue')">Overdue</button>
+                                </div>
+                            </div>
+                            
+                            {% if borrowing_history %}
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="borrowingTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Book</th>
+                                            <th>Borrow Date</th>
+                                            <th>Due Date</th>
+                                            <th>Return Date</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for borrowing in borrowing_history %}
+                                        <tr data-status="{{ borrowing.status|lower }}">
+                                            <td>
+                                                <div>
+                                                    <strong>{{ borrowing.book.title_of_book }}</strong>
+                                                    <br><small class="text-muted">by {{ borrowing.book.author.name }}</small>
+                                                </div>
+                                            </td>
+                                            <td>{{ borrowing.borrow_date|date:"M d, Y" }}</td>
+                                            <td>{{ borrowing.due_date|date:"M d, Y" }}</td>
+                                            <td>
+                                                {% if borrowing.return_date %}
+                                                    {{ borrowing.return_date|date:"M d, Y" }}
+                                                {% else %}
+                                                    <span class="text-muted">Not returned</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if borrowing.return_date %}
+                                                    <span class="badge bg-success">Returned</span>
+                                                {% elif borrowing.due_date < today %}
+                                                    <span class="badge bg-danger">Overdue</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">Active</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if not borrowing.return_date %}
+                                                    <button class="btn btn-sm btn-outline-success" 
+                                                            data-borrowing-id="{{ borrowing.id }}"
+                                                            onclick="returnBook(this.getAttribute('data-borrowing-id'))">
+                                                        <i class="bi bi-check-circle"></i> Return
+                                                    </button>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4">
+                                <i class="bi bi-book fs-1 text-muted"></i>
+                                <h5 class="text-muted mt-2">No Borrowing History</h5>
+                                <p class="text-muted">This member hasn't borrowed any books yet.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Fines & Penalties Tab -->
+                        <div class="tab-pane fade" id="fines">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    Fines & Penalties
+                                </h5>
+                                {% if unpaid_fines %}
+                                <button class="btn btn-success" onclick="payAllFines()">
+                                    <i class="bi bi-credit-card me-2"></i>Pay All Fines
+                                </button>
+                                {% endif %}
+                            </div>
+
+                            {% if fines %}
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <div class="card bg-danger text-white">
+                                        <div class="card-body text-center">
+                                            <h4>${{ total_unpaid_fines|default:0 }}</h4>
+                                            <p class="mb-0">Total Unpaid</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-success text-white">
+                                        <div class="card-body text-center">
+                                            <h4>${{ total_paid_fines|default:0 }}</h4>
+                                            <p class="mb-0">Total Paid</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-info text-white">
+                                        <div class="card-body text-center">
+                                            <h4>{{ fines.count }}</h4>
+                                            <p class="mb-0">Total Fines</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Description</th>
+                                            <th>Amount</th>
+                                            <th>Date Issued</th>
+                                            <th>Due Date</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for fine in fines %}
+                                        <tr>
+                                            <td>{{ fine.reason }}</td>
+                                            <td>${{ fine.amount }}</td>
+                                            <td>{{ fine.fine_date|date:"M d, Y" }}</td>
+                                            <td>{{ fine.due_date|date:"M d, Y" }}</td>
+                                            <td>
+                                                {% if fine.is_paid %}
+                                                    <span class="badge bg-success">Paid</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Unpaid</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if not fine.is_paid %}
+                                                    <button class="btn btn-sm btn-outline-success" 
+                                                            data-fine-id="{{ fine.id }}"
+                                                            onclick="payFine(this.getAttribute('data-fine-id'))">
+                                                        <i class="bi bi-credit-card"></i> Pay
+                                                    </button>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4">
+                                <i class="bi bi-check-circle fs-1 text-success"></i>
+                                <h5 class="text-success mt-2">No Fines</h5>
+                                <p class="text-muted">This member has no outstanding fines.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Activity Log Tab -->
+                        <div class="tab-pane fade" id="activity">
+                            <h5 class="mb-3">
+                                <i class="bi bi-clock-history me-2"></i>
+                                Recent Activity
+                            </h5>
+                            
+                            {% if activity_logs %}
+                            <div class="timeline">
+                                {% for log in activity_logs %}
+                                <div class="timeline-item">
+                                    <div class="timeline-marker">
+                                        {% if "login" in log.action|lower %}
+                                            <i class="bi bi-box-arrow-in-right text-success"></i>
+                                        {% elif "borrow" in log.action|lower %}
+                                            <i class="bi bi-book text-primary"></i>
+                                        {% elif "return" in log.action|lower %}
+                                            <i class="bi bi-check-circle text-success"></i>
+                                        {% else %}
+                                            <i class="bi bi-activity text-muted"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="timeline-content">
+                                        <h6 class="mb-1">{{ log.action }}</h6>
+                                        <p class="mb-1 text-muted">{{ log.details|default:"No additional details" }}</p>
+                                        <small class="text-muted">
+                                            <i class="bi bi-clock me-1"></i>
+                                            {{ log.timestamp|date:"M d, Y H:i" }}
+                                        </small>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4">
+                                <i class="bi bi-clock-history fs-1 text-muted"></i>
+                                <h5 class="text-muted mt-2">No Activity</h5>
+                                <p class="text-muted">No recent activity found for this user.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-left: 2px solid #e9ecef;
+}
+
+.timeline-item:last-child {
+    border-left: none;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -24px;
+    top: 0;
+    width: 40px;
+    height: 40px;
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.timeline-content {
+    margin-left: 20px;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function editUser() {
+    alert('Edit user functionality would be implemented here!');
+}
+
+function toggleUserStatus(action) {
+    const userName = '{{ user.get_full_name|default:user.username }}';
+    const message = action === 'activate' 
+        ? `Are you sure you want to activate ${userName}?`
+        : `Are you sure you want to deactivate ${userName}?`;
+    
+    if (confirm(message)) {
+        // Make AJAX request
+        fetch('{% url "admin_custom:toggle_user_status" user.id %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update the UI
+                const statusBadge = document.querySelector('.badge.bg-success, .badge.bg-danger');
+                const toggleButton = document.querySelector('.btn-outline-danger, .btn-outline-success');
+                
+                if (action === 'deactivate') {
+                    // User was deactivated
+                    if (statusBadge) {
+                        statusBadge.className = 'badge bg-danger';
+                        statusBadge.textContent = 'Inactive User';
+                    }
+                    
+                    if (toggleButton) {
+                        toggleButton.className = 'btn btn-outline-success';
+                        toggleButton.innerHTML = '<i class="bi bi-person-check me-2"></i>Activate';
+                        toggleButton.setAttribute('onclick', "toggleUserStatus('activate')");
+                    }
+                } else {
+                    // User was activated
+                    if (statusBadge) {
+                        statusBadge.className = 'badge bg-success';
+                        statusBadge.textContent = 'Active User';
+                    }
+                    
+                    if (toggleButton) {
+                        toggleButton.className = 'btn btn-outline-danger';
+                        toggleButton.innerHTML = '<i class="bi bi-person-x me-2"></i>Deactivate';
+                        toggleButton.setAttribute('onclick', "toggleUserStatus('deactivate')");
+                    }
+                }
+                
+                // Show success toast
+                showToastMessage(data.message, 'success');
+            } else {
+                // Show error message
+                showToastMessage(data.error || 'An error occurred', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToastMessage('Network error occurred', 'error');
+        });
+    }
+}
+
+function filterBorrowings(status) {
+    const table = document.getElementById('borrowingTable');
+    if (!table) return;
+    
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+    
+    for (let row of rows) {
+        const rowStatus = row.dataset.status;
+        if (status === 'all' || rowStatus === status) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    }
+}
+
+function returnBook(borrowingId) {
+    if (confirm('Are you sure you want to mark this book as returned?')) {
+        alert('Book returned successfully!');
+        location.reload();
+    }
+}
+
+function payFine(fineId) {
+    if (confirm('Are you sure you want to pay this fine?')) {
+        alert('Fine paid successfully!');
+        location.reload();
+    }
+}
+
+function payAllFines() {
+    if (confirm('Are you sure you want to pay all unpaid fines?')) {
+        alert('All fines paid successfully!');
+        location.reload();
+    }
+}
+
+function showToastMessage(message, type = 'info') {
+    // Create toast container if it doesn't exist
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        toastContainer.style.zIndex = '1055';
+        document.body.appendChild(toastContainer);
+    }
+    
+    // Create toast
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    `;
+    
+    toastContainer.appendChild(toast);
+    
+    // Show toast
+    const bsToast = new bootstrap.Toast(toast, {
+        autohide: true,
+        delay: 3000
+    });
+    bsToast.show();
+    
+    // Remove toast element after it's hidden
+    toast.addEventListener('hidden.bs.toast', () => {
+        toast.remove();
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Room Bookings{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'student:student_dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">My Room Bookings</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-calendar-check me-2"></i>My Room Bookings</h2>
+            <p class="text-muted">View and manage your room reservations</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'student:view_rooms' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>Book New Room
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Options -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Bookings</option>
+                                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="confirmed" {% if status_filter == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                                <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div>
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="bi bi-funnel me-2"></i>Filter
+                                </button>
+                                <a href="{% url 'student:my_room_bookings' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-clockwise me-2"></i>Reset
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bookings List -->
+    <div class="row">
+        <div class="col-12">
+            {% if page_obj %}
+                {% for booking in page_obj %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-3">
+                                <h6 class="mb-1">
+                                    <i class="bi bi-door-open me-2"></i>{{ booking.room.room_name }}
+                                </h6>
+                                <small class="text-muted">{{ booking.room.room_number }} - {{ booking.room.location }}</small>
+                            </div>
+                            <div class="col-md-2">
+                                <strong>Date:</strong><br>
+                                <span class="text-primary">{{ booking.booking_date|date:"M d, Y" }}</span>
+                            </div>
+                            <div class="col-md-2">
+                                <strong>Time:</strong><br>
+                                {{ booking.start_time|time:"H:i" }} - {{ booking.end_time|time:"H:i" }}
+                            </div>
+                            <div class="col-md-2">
+                                <strong>Purpose:</strong><br>
+                                <small>{{ booking.purpose|truncatechars:30 }}</small>
+                            </div>
+                            <div class="col-md-2">
+                                <span class="badge 
+                                    {% if booking.status == 'confirmed' %}bg-success
+                                    {% elif booking.status == 'pending' %}bg-warning text-dark
+                                    {% elif booking.status == 'cancelled' %}bg-danger
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ booking.get_status_display }}
+                                </span>
+                            </div>
+                            <div class="col-md-1">
+                                {% if booking.status in 'pending,confirmed' and booking.is_upcoming %}
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" 
+                                            data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <form method="POST" action="{% url 'student:cancel_room_booking' booking.booking_id %}" 
+                                                  onsubmit="return confirm('Are you sure you want to cancel this booking?')">
+                                                {% csrf_token %}
+                                                <button type="submit" class="dropdown-item text-danger">
+                                                    <i class="bi bi-x-circle me-2"></i>Cancel Booking
+                                                </button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if booking.notes %}
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <small class="text-muted">
+                                    <strong>Notes:</strong> {{ booking.notes }}
+                                </small>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar-plus me-1"></i>Booked on: {{ booking.date_booked|date:"M d, Y H:i" }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-calendar-x display-1 text-muted"></i>
+                        <h4 class="mt-3">No Room Bookings Found</h4>
+                        <p class="text-muted">You haven't made any room bookings yet.</p>
+                        <a href="{% url 'student:view_rooms' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-2"></i>Book Your First Room
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Bookings pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}">
+                                Previous
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}">
+                                Next
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-calendar-x display-1 text-muted"></i>
+                    <h4 class="mt-3">No Room Bookings Found</h4>
+                    <p class="text-muted">You haven't made any room bookings yet.</p>
+                    <a href="{% url 'student:view_rooms' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Book Your First Room
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-hide alerts after 5 seconds
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            if (alert) {
+                alert.style.transition = 'opacity 0.5s';
+                alert.style.opacity = '0';
+                setTimeout(() => {
+                    if (alert.parentNode) {
+                        alert.parentNode.removeChild(alert);
+                    }
+                }, 500);
+            }
+        }, 5000);
+    });
+
+    // Confirmation for cancellation
+    const cancelForms = document.querySelectorAll('form[action*="cancel"]');
+    cancelForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const roomName = this.closest('.card').querySelector('h6').textContent.trim();
+            if (!confirm(`Are you sure you want to cancel your booking for ${roomName}?`)) {
+                e.preventDefault();
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,231 @@
+<ul class="nav nav-pills flex-column">
+    <!-- Dashboard -->
+    <li class="nav-item mb-1">
+        <a class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" 
+           href="{% url 'admin_custom:admin_dashboard' %}">
+            <i class="bi bi-speedometer2 me-2"></i>Dashboard
+        </a>
+    </li>
+    
+    <!-- Books Management -->
+    <li class="nav-item mb-2">
+        <h6 class="nav-header text-muted small">
+            <i class="bi bi-book me-2"></i>BOOKS MANAGEMENT
+        </h6>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'core:book_list' %}">
+            <i class="bi bi-books me-2"></i>Manage Books
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'core:add_book' %}">
+            <i class="bi bi-plus-circle me-2"></i>Add New Book
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'core:manage_categories' %}">
+            <i class="bi bi-tags me-2"></i>Categories
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'core:manage_authors' %}">
+            <i class="bi bi-person-lines-fill me-2"></i>Authors
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'core:manage_publishers' %}">
+            <i class="bi bi-building me-2"></i>Publishers
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'core:manage_inventory' %}">
+            <i class="bi bi-box-seam me-2"></i>Inventory
+        </a>
+    </li>
+    
+    <!-- Member Management -->
+    <li class="nav-item mb-2 mt-3">
+        <h6 class="nav-header text-muted small">
+            <i class="bi bi-people me-2"></i>MEMBER MANAGEMENT
+        </h6>
+    </li>
+
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'student:student_dashboard' %}">
+            <i class="bi bi-person-lines-fill me-2"></i>Student Portal
+        </a>
+    </li>
+
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="/admin/auth/user/">
+            <i class="bi bi-person-plus me-2"></i>Manage Users (Django Admin)
+        </a>
+    </li>
+
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'admin_custom:manage_users' %}">
+            <i class="bi bi-people me-2"></i>User Management
+        </a>
+</li>
+    
+    <!-- Advanced Features -->
+    <li class="nav-item mb-2 mt-3">
+        <h6 class="nav-header text-muted small">
+            <i class="bi bi-gear me-2"></i>ADVANCED FEATURES
+        </h6>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'core:search_books' %}">
+            <i class="bi bi-search me-2"></i>Advanced Search
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'core:manage_donations' %}">
+            <i class="bi bi-gift me-2"></i>Manage Donations
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'core:manage_recycle' %}">
+            <i class="bi bi-recycle me-2"></i>Recycle Management
+        </a>
+    </li>
+    
+    <!-- Users Management -->
+    <li class="nav-item mb-2 mt-3">
+        <h6 class="nav-header text-muted small">
+            <i class="bi bi-people me-2"></i>USERS MANAGEMENT
+        </h6>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'admin_custom:manage_users' %}">
+            <i class="bi bi-people me-2"></i>All Users
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'admin_custom:manage_staff' %}">
+            <i class="bi bi-person-badge me-2"></i>Staff Members
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'admin_custom:add_staff' %}">
+            <i class="bi bi-person-plus me-2"></i>Add Staff
+        </a>
+    </li>
+    
+    <!-- Rooms Management -->
+    <li class="nav-item mb-2 mt-3">
+        <h6 class="nav-header text-muted small">
+            <i class="bi bi-door-open me-2"></i>ROOMS MANAGEMENT
+        </h6>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'room_management:room_list' %}">
+            <i class="bi bi-list-ul me-2"></i>All Rooms
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'room_management:add_room' %}">
+            <i class="bi bi-plus-square me-2"></i>Add Room
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'room_management:room_bookings' %}">
+            <i class="bi bi-calendar-check me-2"></i>Room Bookings
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'room_management:manage_maintenance' %}">
+            <i class="bi bi-tools me-2"></i>Maintenance
+        </a>
+    </li>
+    
+    <!-- Reports & Analytics -->
+    <li class="nav-item mb-2 mt-3">
+        <h6 class="nav-header text-muted small">
+            <i class="bi bi-graph-up me-2"></i>REPORTS & ANALYTICS
+        </h6>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'admin_custom:system_reports' %}">
+            <i class="bi bi-graph-up me-2"></i>System Reports
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'admin_custom:system_logs' %}">
+            <i class="bi bi-journal-text me-2"></i>System Logs
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'room_management:room_reports' %}">
+            <i class="bi bi-door-open me-2"></i>Room Reports
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'admin_custom:backup_data' %}">
+            <i class="bi bi-cloud-download me-2"></i>Backup Data
+        </a>
+    </li>
+    
+    <!-- System Settings -->
+    <li class="nav-item mb-2 mt-3">
+        <h6 class="nav-header text-muted small">
+            <i class="bi bi-gear me-2"></i>SYSTEM SETTINGS
+        </h6>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'admin_custom:admin_settings' %}">
+            <i class="bi bi-gear me-2"></i>Settings
+        </a>
+    </li>
+    
+    <li class="nav-item mb-1">
+        <a class="nav-link" href="{% url 'admin_custom:bulk_actions' %}">
+            <i class="bi bi-lightning me-2"></i>Bulk Actions
+        </a>
+    </li>
+</ul>
+
+<!-- System Status -->
+<div class="mt-4 p-3 bg-light rounded">
+    <h6 class="text-muted mb-3">
+        <i class="bi bi-info-circle me-2"></i>System Status
+    </h6>
+    <div class="mb-2">
+        <small class="text-muted">Total Books:</small>
+        <strong class="float-end">{{ total_books|default:0 }}</strong>
+    </div>
+    <div class="mb-2">
+        <small class="text-muted">Active Users:</small>
+        <strong class="float-end">{{ active_users|default:0 }}</strong>
+    </div>
+    <div class="mb-2">
+        <small class="text-muted">Available Rooms:</small>
+        <strong class="float-end">{{ available_rooms|default:0 }}</strong>
+    </div>
+    <div class="mb-2">
+        <small class="text-muted">Pending Bookings:</small>
+        <strong class="float-end">{{ pending_bookings|default:0 }}</strong>
+    </div>
+</div>

@@ -1,0 +1,478 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ book.title_of_book }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.cursor-pointer {
+    cursor: pointer;
+}
+.cursor-pointer:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+    transition: all 0.3s ease;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-book me-2 text-primary"></i>
+                    Book Details
+                </h1>
+                <div>
+                    <a href="{% url 'core:student_book_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Books
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Book Information -->
+    <div class="row">
+        <!-- Book Cover and Actions -->
+        <div class="col-lg-4">
+            <div class="card">                <div class="card-body text-center">
+                    {% if book.image %}
+                        <div class="position-relative">
+                            <img src="{{ book.image.url }}" alt="{{ book.title_of_book }}" 
+                                 class="img-fluid rounded shadow cursor-pointer" 
+                                 style="max-height: 400px; width: 100%; object-fit: cover;"
+                                 onclick="showImageModal('{{ book.image.url }}', '{{ book.title_of_book|escapejs }}')">
+                            <div class="position-absolute top-0 end-0 m-2">
+                                <button type="button" class="btn btn-sm btn-light btn-outline-dark" 
+                                        onclick="showImageModal('{{ book.image.url }}', '{{ book.title_of_book|escapejs }}')" 
+                                        title="View full size">
+                                    <i class="bi bi-arrows-fullscreen"></i>
+                                </button>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="bg-light d-flex align-items-center justify-content-center rounded" 
+                             style="height: 400px;">
+                            <i class="bi bi-book display-1 text-muted"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Availability Status -->
+                    <div class="mt-3">
+                        {% if book.is_available %}
+                            <span class="badge bg-success fs-6">
+                                <i class="bi bi-check-circle me-1"></i>Available for Borrowing
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning fs-6">
+                                <i class="bi bi-clock me-1"></i>Currently Borrowed
+                            </span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Book Condition -->
+                    <div class="mt-2">
+                        <span class="badge bg-secondary">{{ book.state_of_book|title }} Condition</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if can_borrow %}
+                            <a href="{% url 'student:borrow_book' book.book_id %}" class="btn btn-success">
+                                <i class="bi bi-bookmark-plus me-2"></i>Borrow This Book
+                            </a>
+                        {% elif can_reserve %}
+                            {% if not has_reserved %}
+                                <a href="{% url 'student:reserve_book' book.book_id %}" class="btn btn-warning">
+                                    <i class="bi bi-calendar-plus me-2"></i>Reserve This Book
+                                </a>
+                            {% else %}
+                                <button class="btn btn-info" disabled>
+                                    <i class="bi bi-calendar-check me-2"></i>Already Reserved
+                                </button>
+                            {% endif %}
+                        {% else %}
+                            <button class="btn btn-secondary" disabled>
+                                <i class="bi bi-x-circle me-2"></i>Not Available
+                            </button>
+                        {% endif %}
+                        
+                        <button type="button" class="btn btn-outline-primary" onclick="addToWishlist('{{ book.book_id }}')">
+                            <i class="bi bi-heart me-2"></i>Add to Wishlist
+                        </button>
+                        
+                        <button type="button" class="btn btn-outline-info" onclick="shareBook('{{ book.book_id }}')">
+                            <i class="bi bi-share me-2"></i>Share Book
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Info -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Quick Information</h6>
+                </div>
+                <div class="card-body">
+                    <small class="text-muted d-block mb-2">
+                        <i class="bi bi-calendar me-1"></i>
+                        Published: {{ book.publication_date|date:"Y"|default:"Unknown" }}
+                    </small>
+                    <small class="text-muted d-block mb-2">
+                        <i class="bi bi-file-text me-1"></i>
+                        Pages: {{ book.pages|default:"Unknown" }}
+                    </small>
+                    <small class="text-muted d-block mb-2">
+                        <i class="bi bi-translate me-1"></i>
+                        Language: {{ book.language }}
+                    </small>
+                    <small class="text-muted d-block">
+                        <i class="bi bi-hash me-1"></i>
+                        ISBN: {{ book.book_id_isbn }}
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Information -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ book.title_of_book }}</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Basic Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Author</h6>
+                            <p class="mb-3">
+                                <strong>{{ book.author.name }}</strong>
+                                {% if book.author.nationality %}
+                                    <br><small class="text-muted">{{ book.author.nationality }}</small>
+                                {% endif %}
+                            </p>
+                            
+                            <h6 class="text-primary">Publisher</h6>
+                            <p class="mb-3">{{ book.publisher.name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Category</h6>
+                            <p class="mb-3">
+                                <span class="badge bg-secondary fs-6">{{ book.category.name }}</span>
+                            </p>
+                            
+                            <h6 class="text-primary">Publication Date</h6>
+                            <p class="mb-3">{{ book.publication_date|date:"F d, Y"|default:"Not specified" }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    {% if book.description %}
+                        <hr>
+                        <h6 class="text-primary">Description</h6>
+                        <p class="text-justify">{{ book.description }}</p>
+                    {% endif %}
+
+                    <!-- Author Biography -->
+                    {% if book.author.biography %}
+                        <hr>
+                        <h6 class="text-primary">About the Author</h6>
+                        <p class="text-muted">{{ book.author.biography|truncatewords:50 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Related Books -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">More Books by {{ book.author.name }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3" id="relatedBooks">
+                        <!-- Related books will be loaded via AJAX -->
+                        <div class="col-12 text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Similar Books by Category -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Similar Books in {{ book.category.name }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3" id="similarBooks">
+                        <!-- Similar books will be loaded via AJAX -->
+                        <div class="col-12 text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Share Book Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Share Book</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Share "{{ book.title_of_book }}" with friends:</p>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="shareLink" readonly 
+                           value="{{ request.build_absolute_uri }}">
+                    <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard()">
+                        <i class="bi bi-clipboard"></i> Copy
+                    </button>
+                </div>
+                <div class="d-grid gap-2">
+                    <a href="#" class="btn btn-primary" onclick="shareVia('email')">
+                        <i class="bi bi-envelope me-2"></i>Share via Email
+                    </a>
+                    <a href="#" class="btn btn-info" onclick="shareVia('whatsapp')">
+                        <i class="bi bi-whatsapp me-2"></i>Share via WhatsApp
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success/Error Messages -->
+{% if messages %}
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<!-- Image Modal for Full Size View -->
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalTitle">Book Cover</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center p-0">
+                <img id="modalImage" src="" alt="" class="img-fluid w-100" style="max-height: 80vh; object-fit: contain;">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a id="downloadImageBtn" href="" download class="btn btn-primary">
+                    <i class="bi bi-download me-2"></i>Download Image
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Load related books
+document.addEventListener('DOMContentLoaded', function() {
+    loadRelatedBooks();
+    loadSimilarBooks();
+});
+
+function loadRelatedBooks() {
+    fetch(`/core/ajax/related-books/?author_id={{ book.author.id }}&exclude={{ book.book_id }}`)
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('relatedBooks');
+            if (data.books && data.books.length > 0) {
+                container.innerHTML = '';
+                data.books.slice(0, 4).forEach(book => {
+                    container.innerHTML += `
+                        <div class="col-md-6">
+                            <div class="card card-sm">
+                                <div class="row g-0">
+                                    <div class="col-4">
+                                        ${book.image ? 
+                                            `<img src="${book.image}" class="img-fluid rounded-start h-100" style="object-fit: cover;">` :
+                                            `<div class="bg-light d-flex align-items-center justify-content-center h-100">
+                                                <i class="bi bi-book text-muted"></i>
+                                             </div>`
+                                        }
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="card-body p-2">
+                                            <h6 class="card-title mb-1" style="font-size: 0.9rem;">${book.title.substring(0, 30)}...</h6>
+                                            <p class="card-text mb-1">
+                                                <small class="text-muted">${book.category}</small>
+                                            </p>
+                                            <a href="/core/student/books/${book.id}/" class="btn btn-primary btn-sm">View</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                container.innerHTML = '<div class="col-12"><p class="text-muted">No other books by this author.</p></div>';
+            }
+        })
+        .catch(error => {
+            document.getElementById('relatedBooks').innerHTML = 
+                '<div class="col-12"><p class="text-muted">Unable to load related books.</p></div>';
+        });
+}
+
+function loadSimilarBooks() {
+    fetch(`/core/ajax/similar-books/?category_id={{ book.category.id }}&exclude={{ book.book_id }}`)
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('similarBooks');
+            if (data.books && data.books.length > 0) {
+                container.innerHTML = '';
+                data.books.slice(0, 4).forEach(book => {
+                    container.innerHTML += `
+                        <div class="col-md-6">
+                            <div class="card card-sm">
+                                <div class="row g-0">
+                                    <div class="col-4">
+                                        ${book.image ? 
+                                            `<img src="${book.image}" class="img-fluid rounded-start h-100" style="object-fit: cover;">` :
+                                            `<div class="bg-light d-flex align-items-center justify-content-center h-100">
+                                                <i class="bi bi-book text-muted"></i>
+                                             </div>`
+                                        }
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="card-body p-2">
+                                            <h6 class="card-title mb-1" style="font-size: 0.9rem;">${book.title.substring(0, 30)}...</h6>
+                                            <p class="card-text mb-1">
+                                                <small class="text-muted">by ${book.author}</small>
+                                            </p>
+                                            <a href="/core/student/books/${book.id}/" class="btn btn-primary btn-sm">View</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                container.innerHTML = '<div class="col-12"><p class="text-muted">No similar books found.</p></div>';
+            }
+        })
+        .catch(error => {
+            document.getElementById('similarBooks').innerHTML = 
+                '<div class="col-12"><p class="text-muted">Unable to load similar books.</p></div>';
+        });
+}
+
+function addToWishlist(bookId) {
+    fetch('/student/wishlist/add/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({ book_id: bookId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('Book added to wishlist!', 'success');
+        } else {
+            showAlert(data.error || 'Error adding to wishlist', 'error');
+        }
+    })
+    .catch(error => {
+        showAlert('Error adding to wishlist', 'error');
+    });
+}
+
+function shareBook(bookId) {
+    new bootstrap.Modal(document.getElementById('shareModal')).show();
+}
+
+function copyToClipboard() {
+    const shareLink = document.getElementById('shareLink');
+    shareLink.select();
+    shareLink.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(shareLink.value);
+    showAlert('Link copied to clipboard!', 'success');
+}
+
+function shareVia(platform) {
+    const url = encodeURIComponent(window.location.href);
+    const title = encodeURIComponent('{{ book.title_of_book }} by {{ book.author.name }}');
+    
+    if (platform === 'email') {
+        window.open(`mailto:?subject=${title}&body=Check out this book: ${url}`);
+    } else if (platform === 'whatsapp') {
+        window.open(`https://wa.me/?text=${title} ${url}`);
+    }
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Find or create alerts container
+    let container = document.querySelector('.position-fixed.top-0.end-0');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'position-fixed top-0 end-0 p-3';
+        container.style.zIndex = '1050';
+        document.body.appendChild(container);
+    }
+    
+    container.appendChild(alertDiv);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        alertDiv.remove();    }, 5000);
+}
+
+// Show image in modal for full size viewing
+function showImageModal(imageUrl, title) {
+    const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+    const modalImage = document.getElementById('modalImage');
+    const modalTitle = document.getElementById('imageModalTitle');
+    const downloadBtn = document.getElementById('downloadImageBtn');
+    
+    modalImage.src = imageUrl;
+    modalImage.alt = title;
+    modalTitle.textContent = title + ' - Full Size';
+    downloadBtn.href = imageUrl;
+    downloadBtn.download = title.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '_cover.jpg';
+    
+    modal.show();
+}
+</script>
+{% endblock %}

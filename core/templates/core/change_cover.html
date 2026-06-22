@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Change Cover - {{ book.title_of_book }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-image me-2"></i>Change Cover: {{ book.title_of_book }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Current Cover:</h6>
+                            <div class="border rounded p-3 text-center mb-3">
+                                {% if book.image %}
+                                    <img src="{{ book.image.url }}" alt="Current Cover" class="img-fluid" style="max-height: 300px;">
+                                {% else %}
+                                    <div class="text-muted">
+                                        <i class="bi bi-image display-1"></i>
+                                        <p>No cover image</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <form method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                
+                                <h6>Upload New Cover:</h6>
+                                <div class="mb-3">
+                                    <input type="file" class="form-control" id="cover_image" name="cover_image" 
+                                           accept="image/*" required>
+                                    <div class="form-text">
+                                        Supported formats: JPG, PNG, WebP. Max size: 5MB
+                                    </div>
+                                </div>
+                                
+                                <div class="border rounded p-3 text-center mb-3 bg-light" id="preview-area">
+                                    <img id="preview-image" src="" alt="Preview" class="img-fluid" 
+                                         style="max-height: 250px; display: none;">
+                                    <div id="preview-placeholder" class="text-muted">
+                                        <i class="bi bi-cloud-upload display-4"></i>
+                                        <p>Preview will appear here</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{% url 'core:book_detail' book.book_id %}" class="btn btn-secondary">Cancel</a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-upload me-2"></i>Update Cover
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('cover_image').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('preview-image');
+    const placeholder = document.getElementById('preview-placeholder');
+    
+    if (file) {
+        // Validate file size
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File size must be less than 5MB');
+            this.value = '';
+            return;
+        }
+        
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            alert('Please select a valid image file');
+            this.value = '';
+            return;
+        }
+        
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            placeholder.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.style.display = 'none';
+        placeholder.style.display = 'block';
+    }
+});
+</script>
+{% endblock %}

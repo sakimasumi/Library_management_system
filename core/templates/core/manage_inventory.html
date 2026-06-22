@@ -1,0 +1,636 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Inventory{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-boxes me-2 text-info"></i>
+                    Inventory Management
+                </h1>
+                <div>
+                    <a href="{% url 'core:book_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Books
+                    </a>
+                    <a href="{% url 'core:add_inventory' %}" class="btn btn-success">
+                        <i class="bi bi-plus-circle me-2"></i>Add Inventory
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Statistics -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Total Books</h5>
+                            <h2 class="mb-0">{{ total_books }}</h2>
+                        </div>
+                        <i class="bi bi-book-fill display-4 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Available</h5>
+                            <h2 class="mb-0">{{ available_books }}</h2>
+                        </div>
+                        <i class="bi bi-check-circle-fill display-4 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Borrowed</h5>
+                            <h2 class="mb-0">{{ borrowed_books }}</h2>
+                        </div>
+                        <i class="bi bi-clock-fill display-4 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Damaged</h5>
+                            <h2 class="mb-0">{{ damaged_books }}</h2>
+                        </div>
+                        <i class="bi bi-exclamation-triangle-fill display-4 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Search Inventory</label>
+                            <input type="text" class="form-control" name="q" value="{{ query }}" 
+                                   placeholder="Book title, ISBN, or author...">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-select" name="category">
+                                <option value="">All Categories</option>
+                                {% for cat in categories %}
+                                    <option value="{{ cat.name }}" {% if category_filter == cat.name %}selected{% endif %}>
+                                        {{ cat.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="condition" class="form-label">Condition</label>
+                            <select class="form-select" name="condition">
+                                <option value="">All Conditions</option>
+                                <option value="excellent" {% if condition_filter == 'excellent' %}selected{% endif %}>Excellent</option>
+                                <option value="good" {% if condition_filter == 'good' %}selected{% endif %}>Good</option>
+                                <option value="fair" {% if condition_filter == 'fair' %}selected{% endif %}>Fair</option>
+                                <option value="poor" {% if condition_filter == 'poor' %}selected{% endif %}>Poor</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" name="status">
+                                <option value="">All Status</option>
+                                <option value="available" {% if status_filter == 'available' %}selected{% endif %}>Available</option>
+                                <option value="borrowed" {% if status_filter == 'borrowed' %}selected{% endif %}>Borrowed</option>
+                                <option value="reserved" {% if status_filter == 'reserved' %}selected{% endif %}>Reserved</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-search"></i> Search
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="btn-toolbar" role="toolbar">
+                        <div class="btn-group me-2" role="group">
+                            <button type="button" class="btn btn-outline-info" onclick="showBulkUpdateModal()">
+                                <i class="bi bi-arrow-repeat me-1"></i>Bulk Update Status
+                            </button>
+                            <button type="button" class="btn btn-outline-warning" onclick="showConditionUpdateModal()">
+                                <i class="bi bi-tools me-1"></i>Update Condition
+                            </button>
+                        </div>
+                        <div class="btn-group me-2" role="group">
+                            <button type="button" class="btn btn-outline-success" onclick="exportInventory('excel')">
+                                <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" onclick="exportInventory('pdf')">
+                                <i class="bi bi-file-earmark-pdf me-1"></i>Export PDF
+                            </button>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-secondary" onclick="generateReport()">
+                                <i class="bi bi-graph-up me-1"></i>Generate Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Inventory Items ({{ books.count }} total)</h5>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                        <label class="form-check-label" for="selectAll">
+                            Select All
+                        </label>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if books %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">                                <thead class="table-light">
+                                    <tr>
+                                        <th width="40">
+                                            <input type="checkbox" class="form-check-input">
+                                        </th>
+                                        <th>Book Details</th>
+                                        <th>Inventory Info</th>
+                                        <th>Location</th>
+                                        <th>Current Status</th>
+                                        <th>Condition</th>
+                                        <th>Last Updated</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for book in books %}
+                                    <tr id="book-row-{{ book.book_id }}">
+                                        <td>
+                                            <input type="checkbox" class="form-check-input book-checkbox" 
+                                                   value="{{ book.book_id }}">
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if book.image %}
+                                                    <img src="{{ book.image.url }}" alt="{{ book.title_of_book }}" 
+                                                         class="rounded me-3" style="width: 50px; height: 60px; object-fit: cover;">
+                                                {% else %}
+                                                    <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" 
+                                                         style="width: 50px; height: 60px;">
+                                                        <i class="bi bi-book text-muted"></i>
+                                                    </div>
+                                                {% endif %}
+                                                <div>
+                                                    <h6 class="mb-1">{{ book.title_of_book|truncatechars:40 }}</h6>
+                                                    <small class="text-muted">
+                                                        by {{ book.author.name }}<br>
+                                                        ISBN: {{ book.book_id_isbn }}
+                                                    </small>                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="small">
+                                                <div class="mb-1">
+                                                    <span class="badge bg-primary">{{ book.inventory.total_copies }}</span> Total
+                                                </div>
+                                                <div class="text-success">
+                                                    <i class="bi bi-check-circle me-1"></i>{{ book.inventory.available_copies }} Available
+                                                </div>
+                                                {% if book.inventory.borrowed_copies > 0 %}
+                                                <div class="text-warning">
+                                                    <i class="bi bi-clock me-1"></i>{{ book.inventory.borrowed_copies }} Borrowed
+                                                </div>
+                                                {% endif %}
+                                                {% if book.inventory.damaged_copies > 0 %}
+                                                <div class="text-danger">
+                                                    <i class="bi bi-exclamation-triangle me-1"></i>{{ book.inventory.damaged_copies }} Damaged
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-geo-alt me-2 text-muted"></i>
+                                                <span class="badge bg-secondary">{{ book.inventory.shelf_location }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div id="status-{{ book.book_id }}">
+                                                {% if book.is_available %}
+                                                    <span class="badge bg-success fs-6">
+                                                        <i class="bi bi-check-circle me-1"></i>Available
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-warning fs-6">
+                                                        <i class="bi bi-clock me-1"></i>Borrowed
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                            {% if book.current_borrower %}
+                                                <small class="text-muted d-block">
+                                                    Borrowed by: {{ book.current_borrower.user.get_full_name|default:book.current_borrower.user.username }}
+                                                </small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div id="condition-{{ book.book_id }}">
+                                                {% if book.state_of_book == 'excellent' %}
+                                                    <span class="badge bg-success">Excellent</span>
+                                                {% elif book.state_of_book == 'good' %}
+                                                    <span class="badge bg-info">Good</span>
+                                                {% elif book.state_of_book == 'fair' %}
+                                                    <span class="badge bg-warning">Fair</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Poor</span>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {{ book.updated_at|date:"M d, Y" }}<br>
+                                                {{ book.updated_at|time:"H:i" }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                        onclick="viewInventoryDetails('{{ book.book_id }}')" title="View Details">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-warning" 
+                                                        onclick="updateBookCondition('{{ book.book_id }}')" title="Update Condition">
+                                                    <i class="bi bi-tools"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-info" 
+                                                        onclick="toggleBookStatus('{{ book.book_id }}')" title="Toggle Status">
+                                                    <i class="bi bi-arrow-repeat"></i>
+                                                </button>
+                                                <a href="{% url 'core:book_detail' book.book_id %}" 
+                                                   class="btn btn-sm btn-outline-secondary" title="Full Details">
+                                                    <i class="bi bi-info-circle"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Page navigation" class="mt-3">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}">First</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">Previous</a>
+                                        </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}">Next</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}">Last</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-inbox display-1 text-muted"></i>
+                            <h5 class="mt-3">No inventory items found</h5>
+                            <p class="text-muted">Try adjusting your search criteria.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Update Status Modal -->
+<div class="modal fade" id="bulkUpdateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Bulk Update Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="bulkUpdateForm">
+                    <div class="mb-3">
+                        <label for="bulk_status" class="form-label">New Status</label>
+                        <select class="form-select" id="bulk_status" name="status" required>
+                            <option value="">Select status...</option>
+                            <option value="available">Available</option>
+                            <option value="maintenance">Under Maintenance</option>
+                            <option value="damaged">Damaged</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="bulk_notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="bulk_notes" name="notes" rows="3" 
+                                  placeholder="Reason for status change..."></textarea>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <span id="selectedBooksCount">0</span> books will be updated.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="processBulkUpdate()">Update Status</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Condition Modal -->
+<div class="modal fade" id="conditionUpdateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Book Condition</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="conditionUpdateForm">
+                    <input type="hidden" id="condition_book_id" name="book_id">
+                    <div class="mb-3">
+                        <label for="new_condition" class="form-label">New Condition</label>
+                        <select class="form-select" id="new_condition" name="condition" required>
+                            <option value="">Select condition...</option>
+                            <option value="excellent">Excellent</option>
+                            <option value="good">Good</option>
+                            <option value="fair">Fair</option>
+                            <option value="poor">Poor</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="condition_notes" class="form-label">Condition Notes</label>
+                        <textarea class="form-control" id="condition_notes" name="notes" rows="3" 
+                                  placeholder="Describe the current condition..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="inspection_date" class="form-label">Inspection Date</label>
+                        <input type="date" class="form-control" id="inspection_date" name="inspection_date" 
+                               value="{{ today|date:'Y-m-d' }}">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" onclick="processConditionUpdate()">Update Condition</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Inventory Details Modal -->
+<div class="modal fade" id="inventoryDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Inventory Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="inventoryDetailsContent">
+                <!-- Content loaded via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedBooks = [];
+
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.book-checkbox');
+    
+    checkboxes.forEach(cb => {
+        cb.checked = selectAll.checked;
+    });
+    
+    updateSelectedBooks();
+}
+
+function updateSelectedBooks() {
+    selectedBooks = Array.from(document.querySelectorAll('.book-checkbox:checked')).map(cb => cb.value);
+    document.getElementById('selectedBooksCount').textContent = selectedBooks.length;
+}
+
+// Add event listeners to checkboxes
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.book-checkbox').forEach(cb => {
+        cb.addEventListener('change', updateSelectedBooks);
+    });
+});
+
+function showBulkUpdateModal() {
+    if (selectedBooks.length === 0) {
+        alert('Please select books first.');
+        return;
+    }
+    updateSelectedBooks();
+    new bootstrap.Modal(document.getElementById('bulkUpdateModal')).show();
+}
+
+function processBulkUpdate() {
+    const status = document.getElementById('bulk_status').value;
+    const notes = document.getElementById('bulk_notes').value;
+    
+    if (!status) {
+        alert('Please select a status.');
+        return;
+    }
+    
+    fetch('/core/ajax/bulk-update-status/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            book_ids: selectedBooks,
+            status: status,
+            notes: notes
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Updated ${data.updated_count} books successfully!`);
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating status');
+    });
+}
+
+function updateBookCondition(bookId) {
+    document.getElementById('condition_book_id').value = bookId;
+    new bootstrap.Modal(document.getElementById('conditionUpdateModal')).show();
+}
+
+function processConditionUpdate() {
+    const formData = new FormData(document.getElementById('conditionUpdateForm'));
+    
+    fetch('/core/ajax/update-condition/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update the condition badge in the table
+            const conditionElement = document.getElementById(`condition-${data.book_id}`);
+            conditionElement.innerHTML = `<span class="badge bg-${data.badge_class}">${data.condition_display}</span>`;
+            
+            bootstrap.Modal.getInstance(document.getElementById('conditionUpdateModal')).hide();
+            alert('Condition updated successfully!');
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating condition');
+    });
+}
+
+function toggleBookStatus(bookId) {
+    if (confirm('Toggle book availability status?')) {
+        fetch(`/core/ajax/toggle-status/${bookId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update the status badge
+                const statusElement = document.getElementById(`status-${bookId}`);
+                statusElement.innerHTML = data.status_html;
+                alert('Status updated successfully!');
+            } else {
+                alert('Error: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error toggling status');
+        });
+    }
+}
+
+function viewInventoryDetails(bookId) {
+    fetch(`/core/ajax/inventory-details/${bookId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('inventoryDetailsContent').innerHTML = data.html;
+                new bootstrap.Modal(document.getElementById('inventoryDetailsModal')).show();
+            } else {
+                alert('Error loading details');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading inventory details');
+        });
+}
+
+function exportInventory(format) {
+    const currentUrl = new URL(window.location);
+    currentUrl.searchParams.set('export', format);
+    window.location.href = currentUrl.toString();
+}
+
+function generateReport() {
+    window.open('/core/reports/inventory/', '_blank');
+}
+
+function showConditionUpdateModal() {
+    if (selectedBooks.length === 0) {
+        alert('Please select books first.');
+        return;
+    }
+    alert('Bulk condition update feature - to be implemented');
+}
+
+// Auto-submit form on filter change
+document.querySelector('select[name="category"]').addEventListener('change', function() {
+    this.form.submit();
+});
+
+document.querySelector('select[name="condition"]').addEventListener('change', function() {
+    this.form.submit();
+});
+
+document.querySelector('select[name="status"]').addEventListener('change', function() {
+    this.form.submit();
+});
+</script>
+{% endblock %}

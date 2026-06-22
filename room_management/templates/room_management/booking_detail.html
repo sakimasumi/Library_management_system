@@ -1,0 +1,333 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Booking Details - #{{ booking.booking_id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'room_management:room_bookings' %}">Bookings</a></li>
+                            <li class="breadcrumb-item active">Booking Details</li>
+                        </ol>
+                    </nav>
+                    <h1>
+                        <i class="bi bi-calendar-check me-2 text-primary"></i>
+                        Booking Details
+                    </h1>
+                    <p class="text-muted">Complete information for booking #{{ booking.booking_id|stringformat:"05d" }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'room_management:room_bookings' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Bookings
+                    </a>
+                    {% if booking.status == 'pending' %}
+                        <a href="{% url 'room_management:approve_booking' booking.booking_id %}" class="btn btn-success">
+                            <i class="bi bi-check-circle me-2"></i>Approve
+                        </a>
+                    {% endif %}
+                    {% if booking.status in 'pending,confirmed' %}
+                        <a href="{% url 'room_management:cancel_booking' booking.booking_id %}" class="btn btn-danger">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Alert -->
+    <div class="row mb-4">
+        <div class="col-12">
+            {% if booking.status == 'confirmed' %}
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <strong>Confirmed Booking</strong> - This booking has been approved and confirmed
+                    {% if booking.approved_by %}
+                        by {{ booking.approved_by.get_full_name|default:booking.approved_by.username }}
+                        {% if booking.date_approved %}on {{ booking.date_approved|date:"M d, Y g:i A" }}{% endif %}
+                    {% endif %}
+                </div>
+            {% elif booking.status == 'pending' %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-clock-fill me-2"></i>
+                    <strong>Pending Approval</strong> - This booking is waiting for staff approval
+                </div>
+            {% elif booking.status == 'cancelled' %}
+                <div class="alert alert-danger">
+                    <i class="bi bi-x-circle-fill me-2"></i>
+                    <strong>Cancelled</strong> - This booking has been cancelled
+                </div>
+            {% elif booking.status == 'completed' %}
+                <div class="alert alert-info">
+                    <i class="bi bi-check-square-fill me-2"></i>
+                    <strong>Completed</strong> - This booking has been completed
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <!-- Left Column - Booking Information -->
+        <div class="col-lg-8">
+            <!-- Basic Booking Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Booking Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Left Column Details -->
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted fw-medium">Booking ID:</td>
+                                    <td class="fw-bold">#{{ booking.booking_id|stringformat:"05d" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium">Room:</td>
+                                    <td>
+                                        <div class="fw-medium">
+                                            <a href="{% url 'room_management:room_detail' booking.room.room_id %}" class="text-decoration-none">
+                                                {{ booking.room.room_name }}
+                                            </a>
+                                        </div>
+                                        <small class="text-muted">{{ booking.room.room_number }}</small>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium">Date:</td>
+                                    <td class="fw-medium">{{ booking.booking_date|date:"l, F d, Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium">Time:</td>
+                                    <td class="fw-medium">
+                                        {{ booking.start_time|time:"g:i A" }} - {{ booking.end_time|time:"g:i A" }}
+                                        <span class="badge bg-info ms-2">{{ booking.duration_hours }}h</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium">Attendees:</td>
+                                    <td>{{ booking.attendees_count }} people</td>
+                                </tr>
+                            </table>
+                        </div>
+                        
+                        <!-- Right Column Details -->
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="text-muted fw-medium">Booked By:</td>
+                                    <td>
+                                        <div class="fw-medium">{{ booking.booked_by.get_full_name|default:booking.booked_by.username }}</div>
+                                        <small class="text-muted">{{ booking.booked_by.email }}</small>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium">Request Date:</td>
+                                    <td>{{ booking.date_booked|date:"M d, Y g:i A" }}</td>
+                                </tr>
+                                {% if booking.approved_by %}
+                                <tr>
+                                    <td class="text-muted fw-medium">Approved By:</td>
+                                    <td>
+                                        <div class="fw-medium">{{ booking.approved_by.get_full_name|default:booking.approved_by.username }}</div>
+                                        {% if booking.date_approved %}
+                                            <small class="text-muted">{{ booking.date_approved|date:"M d, Y g:i A" }}</small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <td class="text-muted fw-medium">Status:</td>
+                                    <td>
+                                        {% if booking.status == 'confirmed' %}
+                                            <span class="badge bg-success">Confirmed</span>
+                                        {% elif booking.status == 'pending' %}
+                                            <span class="badge bg-warning">Pending</span>
+                                        {% elif booking.status == 'cancelled' %}
+                                            <span class="badge bg-danger">Cancelled</span>
+                                        {% elif booking.status == 'completed' %}
+                                            <span class="badge bg-primary">Completed</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Purpose -->
+                    <div class="mt-3">
+                        <h6 class="text-muted">Purpose:</h6>
+                        <p class="mb-2">{{ booking.purpose }}</p>
+                    </div>
+
+                    <!-- Special Requirements -->
+                    {% if booking.special_requirements %}
+                        <div class="mt-3">
+                            <h6 class="text-muted">Special Requirements:</h6>
+                            <p class="mb-2">{{ booking.special_requirements }}</p>
+                        </div>
+                    {% endif %}
+
+                    <!-- Notes -->
+                    {% if booking.notes %}
+                        <div class="mt-3">
+                            <h6 class="text-muted">Notes:</h6>
+                            <p class="mb-0">{{ booking.notes }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Schedule Conflicts -->
+            {% if conflicting_bookings %}
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Schedule Conflicts
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-warning mb-3">This booking conflicts with the following bookings:</p>
+                        {% for conflict in conflicting_bookings %}
+                            <div class="alert alert-warning">
+                                <strong>{{ conflict.room.room_name }}</strong> - 
+                                {{ conflict.booking_date|date:"M d, Y" }} 
+                                ({{ conflict.start_time|time:"g:i A" }} - {{ conflict.end_time|time:"g:i A" }})
+                                <br>
+                                <small>Booked by: {{ conflict.booked_by.get_full_name|default:conflict.booked_by.username }}</small>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Column - Sidebar -->
+        <div class="col-lg-4">
+            <!-- Room Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-building me-2"></i>
+                        Room Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <td class="text-muted">Type:</td>
+                            <td>{{ booking.room.get_room_type_display }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Capacity:</td>
+                            <td>{{ booking.room.capacity }} people</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Location:</td>
+                            <td>{{ booking.room.location }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Status:</td>
+                            <td>
+                                {% if booking.room.status == 'available' %}
+                                    <span class="badge bg-success">Available</span>
+                                {% else %}
+                                    <span class="badge bg-warning">{{ booking.room.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+
+                    {% if booking.room.facilities %}
+                        <div class="mt-3">
+                            <h6 class="text-muted small">Facilities:</h6>
+                            <p class="small mb-0">{{ booking.room.facilities }}</p>
+                        </div>
+                    {% endif %}
+
+                    <div class="mt-3">
+                        <a href="{% url 'room_management:room_detail' booking.room.room_id %}" class="btn btn-outline-info btn-sm w-100">
+                            <i class="bi bi-eye me-2"></i>View Room Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Capacity Check -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-people me-2"></i>
+                        Capacity Check
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small">Requested</div>
+                            <div class="fw-bold">{{ booking.attendees_count }} people</div>
+                        </div>
+                        <div class="text-center">
+                            <i class="bi bi-arrow-right text-muted"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small">Room Capacity</div>
+                            <div class="fw-bold">{{ booking.room.capacity }} people</div>
+                        </div>
+                    </div>
+                    {% if booking.attendees_count <= booking.room.capacity %}
+                        <div class="alert alert-success mt-3 mb-0">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <small>Capacity requirement met</small>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning mt-3 mb-0">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <small>Exceeds room capacity</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Other Bookings Same Day -->
+            {% if same_day_bookings %}
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="bi bi-calendar me-2"></i>
+                            Other Bookings Today
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% for other_booking in same_day_bookings %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <div class="small fw-medium">
+                                        {{ other_booking.start_time|time:"g:i A" }} - {{ other_booking.end_time|time:"g:i A" }}
+                                    </div>
+                                    <div class="small text-muted">
+                                        {{ other_booking.booked_by.get_full_name|default:other_booking.booked_by.username }}
+                                    </div>
+                                </div>
+                                <span class="badge bg-secondary">{{ other_booking.get_status_display }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

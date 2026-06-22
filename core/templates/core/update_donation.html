@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Update Donation{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-pencil-square me-2 text-warning"></i>
+                    Update Donation Record
+                </h1>
+                <div>
+                    <a href="{% url 'core:manage_donations' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Donations
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-gift me-2"></i>
+                        Update Donation: {{ donation.title_of_book }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if donation.is_processed %}
+                        <div class="alert alert-info" role="alert">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Note:</strong> This donation has been processed and is linked to book inventory. 
+                            Changes will update both the donation record and the associated book.
+                        </div>
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data" id="updateDonationForm">
+                        {% csrf_token %}
+                        
+                        <!-- Donor Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="bi bi-person me-2"></i>Donor Information
+                                </h6>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.donor_name.id_for_label }}" class="form-label">
+                                        Donor Name <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.donor_name }}
+                                    {% if form.donor_name.errors %}
+                                        <div class="text-danger small">{{ form.donor_name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.donor_email.id_for_label }}" class="form-label">
+                                        Email Address
+                                    </label>
+                                    {{ form.donor_email }}
+                                    {% if form.donor_email.errors %}
+                                        <div class="text-danger small">{{ form.donor_email.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.donor_phone.id_for_label }}" class="form-label">
+                                        Phone Number
+                                    </label>
+                                    {{ form.donor_phone }}
+                                    {% if form.donor_phone.errors %}
+                                        <div class="text-danger small">{{ form.donor_phone.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Book Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="bi bi-book me-2"></i>Book Information
+                                </h6>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.title_of_book.id_for_label }}" class="form-label">
+                                        Book Title <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.title_of_book }}
+                                    {% if form.title_of_book.errors %}
+                                        <div class="text-danger small">{{ form.title_of_book.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.book_id_isbn.id_for_label }}" class="form-label">
+                                        ISBN <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.book_id_isbn }}
+                                    {% if form.book_id_isbn.errors %}
+                                        <div class="text-danger small">{{ form.book_id_isbn.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.author.id_for_label }}" class="form-label">
+                                        Author <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.author }}
+                                    {% if form.author.errors %}
+                                        <div class="text-danger small">{{ form.author.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.publisher.id_for_label }}" class="form-label">
+                                        Publisher <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.publisher }}
+                                    {% if form.publisher.errors %}
+                                        <div class="text-danger small">{{ form.publisher.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.category.id_for_label }}" class="form-label">
+                                        Category <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.category }}
+                                    {% if form.category.errors %}
+                                        <div class="text-danger small">{{ form.category.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Donation Details -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="bi bi-info-circle me-2"></i>Donation Details
+                                </h6>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.quantity.id_for_label }}" class="form-label">
+                                        Quantity <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.quantity }}
+                                    {% if form.quantity.errors %}
+                                        <div class="text-danger small">{{ form.quantity.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.state_of_book.id_for_label }}" class="form-label">
+                                        Book Condition <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.state_of_book }}
+                                    {% if form.state_of_book.errors %}
+                                        <div class="text-danger small">{{ form.state_of_book.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.donate_date.id_for_label }}" class="form-label">
+                                        Donation Date <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.donate_date }}
+                                    {% if form.donate_date.errors %}
+                                        <div class="text-danger small">{{ form.donate_date.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Book Cover -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="bi bi-image me-2"></i>Book Cover
+                                </h6>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.book_cover.id_for_label }}" class="form-label">
+                                        Upload New Cover (Optional)
+                                    </label>
+                                    {{ form.book_cover }}
+                                    {% if form.book_cover.errors %}
+                                        <div class="text-danger small">{{ form.book_cover.errors.0 }}</div>
+                                    {% endif %}
+                                    <div class="form-text">Leave empty to keep current cover</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                {% if donation.book_cover %}
+                                    <div class="mb-3">
+                                        <label class="form-label">Current Cover</label>
+                                        <div>
+                                            <img src="{{ donation.book_cover.url }}" alt="Current cover" 
+                                                 class="img-thumbnail" style="max-width: 150px; max-height: 200px;">
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="{{ form.notes.id_for_label }}" class="form-label">
+                                        Notes
+                                    </label>
+                                    {{ form.notes }}
+                                    {% if form.notes.errors %}
+                                        <div class="text-danger small">{{ form.notes.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'core:manage_donations' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-check-circle me-2"></i>Update Donation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/donation-form.js' %}"></script>
+{% endblock %}

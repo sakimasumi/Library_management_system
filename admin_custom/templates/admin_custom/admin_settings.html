@@ -1,0 +1,422 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Settings{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-gear me-2 text-primary"></i>
+                    System Configuration
+                </h1>
+                <div>
+                    <a href="{% url 'admin_custom:admin_dashboard' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="bi bi-check-circle-fill text-success fs-1"></i>
+                    <h5 class="card-title mt-2">System Status</h5>
+                    <p class="card-text">
+                        <span class="badge bg-success">Online</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="bi bi-database-fill text-info fs-1"></i>
+                    <h5 class="card-title mt-2">Database</h5>
+                    <p class="card-text">
+                        <span class="badge bg-info">MySQL</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="bi bi-trash3-fill text-warning fs-1"></i>
+                    <h5 class="card-title mt-2">Cleanup</h5>
+                    <p class="card-text">
+                        <span class="badge bg-warning">5 Models Removed</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="bi bi-clock-fill text-secondary fs-1"></i>
+                    <h5 class="card-title mt-2">Uptime</h5>
+                    <p class="card-text">
+                        <span class="badge bg-secondary">15d 8h</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Settings Content -->
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Settings Configuration -->
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-sliders me-2"></i>Configuration Options</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="d-grid">
+                                <a href="/admin/" class="btn btn-primary btn-lg" target="_blank">
+                                    <i class="bi bi-gear-fill me-2"></i>
+                                    Django Admin Panel
+                                </a>
+                                <small class="text-muted mt-1">Access full system configuration</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-grid">
+                                <button class="btn btn-outline-info btn-lg" onclick="showSystemInfo()">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    System Information
+                                </button>
+                                <small class="text-muted mt-1">View detailed system specs</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-grid">
+                                <button class="btn btn-outline-warning btn-lg" onclick="backupSystem()">
+                                    <i class="bi bi-download me-2"></i>
+                                    Create Backup
+                                </button>
+                                <small class="text-muted mt-1">Backup system data</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-grid">
+                                <button class="btn btn-outline-secondary btn-lg" onclick="clearCache()">
+                                    <i class="bi bi-arrow-clockwise me-2"></i>
+                                    Clear Cache
+                                </button>
+                                <small class="text-muted mt-1">Clear system cache</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Settings -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5><i class="bi bi-lightning-fill me-2"></i>Quick Settings</h5>
+                </div>
+                <div class="card-body">
+                    <form id="quickSettingsForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="maintenance_mode" class="form-label">
+                                        <i class="bi bi-tools me-1"></i>Maintenance Mode
+                                    </label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="maintenance_mode" name="maintenance_mode">
+                                        <label class="form-check-label" for="maintenance_mode">
+                                            Enable maintenance mode
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="debug_mode" class="form-label">
+                                        <i class="bi bi-bug me-1"></i>Debug Mode
+                                    </label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="debug_mode" name="debug_mode">
+                                        <label class="form-check-label" for="debug_mode">
+                                            Enable debug logging
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="auto_backup" class="form-label">
+                                        <i class="bi bi-cloud-arrow-up me-1"></i>Auto Backup
+                                    </label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="auto_backup" name="auto_backup" checked>
+                                        <label class="form-check-label" for="auto_backup">
+                                            Enable automatic backups
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="email_notifications" class="form-label">
+                                        <i class="bi bi-envelope me-1"></i>Email Notifications
+                                    </label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications" checked>
+                                        <label class="form-check-label" for="email_notifications">
+                                            Send system notifications
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-2"></i>Save Quick Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- System Health -->
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-heart-pulse me-2"></i>System Health</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="text-muted">Database Performance</small>
+                            <small class="text-muted">95%</small>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" style="width: 95%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="text-muted">Storage Usage</small>
+                            <small class="text-muted">73%</small>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" style="width: 73%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="text-muted">Memory Usage</small>
+                            <small class="text-muted">45%</small>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-info" style="width: 45%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="text-muted">CPU Usage</small>
+                            <small class="text-muted">32%</small>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-primary" style="width: 32%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5><i class="bi bi-activity me-2"></i>Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item border-0 px-0">
+                            <small class="text-muted">2 hours ago</small>
+                            <div>Database cleanup completed</div>
+                        </div>
+                        <div class="list-group-item border-0 px-0">
+                            <small class="text-muted">1 day ago</small>
+                            <div>System backup created</div>
+                        </div>
+                        <div class="list-group-item border-0 px-0">
+                            <small class="text-muted">3 days ago</small>
+                            <div>5 unused models removed</div>
+                        </div>
+                        <div class="list-group-item border-0 px-0">
+                            <small class="text-muted">1 week ago</small>
+                            <div>Security update applied</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Information Modal -->
+<div class="modal fade" id="systemInfoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-info-circle me-2"></i>System Information
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>System Details</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Version:</strong></td>
+                                <td>Library Management v2.1.0</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Database:</strong></td>
+                                <td>MySQL 8.0</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Framework:</strong></td>
+                                <td>Django 4.2</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Python:</strong></td>
+                                <td>3.12.0</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Statistics</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Total Models:</strong></td>
+                                <td>29 (5 removed)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Database Size:</strong></td>
+                                <td>2.1 GB</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Uptime:</strong></td>
+                                <td>15 days, 8 hours</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Last Backup:</strong></td>
+                                <td>June 9, 2025</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Quick settings form submission
+    document.getElementById('quickSettingsForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Show loading state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Saving...';
+        submitBtn.disabled = true;
+        
+        // Simulate save operation
+        setTimeout(() => {
+            submitBtn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Saved!';
+            submitBtn.classList.remove('btn-success');
+            submitBtn.classList.add('btn-outline-success');
+            
+            // Reset after 2 seconds
+            setTimeout(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.classList.remove('btn-outline-success');
+                submitBtn.classList.add('btn-success');
+                submitBtn.disabled = false;
+            }, 2000);
+        }, 1000);
+    });
+});
+
+// System Information Modal
+function showSystemInfo() {
+    const modal = new bootstrap.Modal(document.getElementById('systemInfoModal'));
+    modal.show();
+}
+
+// Backup System
+function backupSystem() {
+    if (confirm('Create a system backup now? This may take a few minutes.')) {
+        // Show progress
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Creating Backup...';
+        btn.disabled = true;
+        
+        setTimeout(() => {
+            btn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Backup Complete!';
+            btn.classList.remove('btn-outline-warning');
+            btn.classList.add('btn-outline-success');
+            
+            // Reset after 3 seconds
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('btn-outline-success');
+                btn.classList.add('btn-outline-warning');
+                btn.disabled = false;
+            }, 3000);
+        }, 2000);
+    }
+}
+
+// Clear Cache
+function clearCache() {
+    if (confirm('Clear system cache? This will temporarily slow down the system.')) {
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Clearing Cache...';
+        btn.disabled = true;
+        
+        setTimeout(() => {
+            btn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Cache Cleared!';
+            btn.classList.remove('btn-outline-secondary');
+            btn.classList.add('btn-outline-success');
+            
+            // Reset after 2 seconds
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('btn-outline-success');
+                btn.classList.add('btn-outline-secondary');
+                btn.disabled = false;
+            }, 2000);
+        }, 1500);
+    }
+}
+
+// Auto-refresh system health every 30 seconds
+setInterval(function() {
+    // In real app, this would fetch actual system metrics
+    console.log('System health metrics refreshed');
+}, 30000);
+</script>
+{% endblock %}

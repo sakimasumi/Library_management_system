@@ -1,0 +1,369 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Inventory Item{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-plus-circle me-2 text-success"></i>
+                    Add Inventory Item
+                </h1>
+                <div>
+                    <a href="{% url 'core:manage_inventory' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Inventory
+                    </a>
+                    <a href="{% url 'core:book_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-list me-2"></i>All Books
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Inventory Form -->
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">New Inventory Entry</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="addInventoryForm">
+                        {% csrf_token %}
+                        
+                        <!-- Book Selection -->
+                        <div class="mb-4">
+                            <label for="book_search" class="form-label">Select Book *</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="book_search" 
+                                       placeholder="Search by title, author, or ISBN...">
+                                <button type="button" class="btn btn-outline-secondary" onclick="searchBooks()">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                            <input type="hidden" name="book_id" id="selected_book_id" required>
+                            <div id="book_search_results" class="mt-2"></div>
+                            <div id="selected_book_info" class="mt-2" style="display: none;">
+                                <!-- Selected book info will appear here -->
+                            </div>
+                        </div>
+
+                        <!-- Inventory Details -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="quantity" class="form-label">Quantity *</label>
+                                    <input type="number" class="form-control" name="quantity" id="quantity" 
+                                           min="1" max="100" value="1" required>
+                                    <div class="form-text">Number of copies to add to inventory</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="condition" class="form-label">Initial Condition *</label>
+                                    <select class="form-select" name="condition" id="condition" required>
+                                        <option value="">Select condition...</option>
+                                        <option value="excellent" selected>Excellent</option>
+                                        <option value="good">Good</option>
+                                        <option value="fair">Fair</option>
+                                        <option value="poor">Poor</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="acquisition_date" class="form-label">Acquisition Date</label>
+                                    <input type="date" class="form-control" name="acquisition_date" 
+                                           id="acquisition_date" value="{{ today|date:'Y-m-d' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="cost_per_unit" class="form-label">Cost per Unit</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" name="cost_per_unit" 
+                                               id="cost_per_unit" step="0.01" min="0">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Supplier Information -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="supplier" class="form-label">Supplier</label>
+                                    <input type="text" class="form-control" name="supplier" id="supplier" 
+                                           placeholder="Book supplier or vendor">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="location" class="form-label">Storage Location</label>
+                                    <select class="form-select" name="location" id="location">
+                                        <option value="">Select location...</option>
+                                        <option value="main_floor">Main Floor</option>
+                                        <option value="second_floor">Second Floor</option>
+                                        <option value="reference_section">Reference Section</option>
+                                        <option value="storage_room">Storage Room</option>
+                                        <option value="archive">Archive</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Information -->
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea class="form-control" name="notes" id="notes" rows="3" 
+                                      placeholder="Additional notes about this inventory entry..."></textarea>
+                        </div>
+
+                        <!-- Generate IDs Option -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="generate_ids" 
+                                       id="generate_ids" checked>
+                                <label class="form-check-label" for="generate_ids">
+                                    Auto-generate unique inventory IDs for each copy
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'core:manage_inventory' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                            <button type="button" class="btn btn-info" onclick="previewInventory()">
+                                <i class="bi bi-eye me-2"></i>Preview
+                            </button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-2"></i>Add to Inventory
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Book Search Modal -->
+<div class="modal fade" id="bookSearchModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Search Books</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="modal_book_search" 
+                           placeholder="Search by title, author, or ISBN...">
+                </div>
+                <div id="modal_search_results">
+                    <!-- Search results will appear here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Inventory Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="previewContent">
+                <!-- Preview content will be populated by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" onclick="submitForm()">Add to Inventory</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let searchTimeout;
+
+function searchBooks() {
+    const query = document.getElementById('book_search').value.trim();
+    if (query.length < 2) {
+        alert('Please enter at least 2 characters to search.');
+        return;
+    }
+
+    fetch(`/core/ajax/search-books/?q=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+            displaySearchResults(data.books);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error searching books');
+        });
+}
+
+function displaySearchResults(books) {
+    const resultsDiv = document.getElementById('book_search_results');
+    
+    if (books.length === 0) {
+        resultsDiv.innerHTML = '<div class="alert alert-info">No books found. <a href="/core/books/add/">Add a new book</a></div>';
+        return;
+    }
+
+    let html = '<div class="list-group">';
+    books.forEach(book => {
+        html += `
+            <div class="list-group-item list-group-item-action" onclick="selectBook('${book.id}', '${book.title}', '${book.author}', '${book.isbn}')">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1">${book.title}</h6>
+                        <small class="text-muted">by ${book.author} • ISBN: ${book.isbn}</small>
+                    </div>
+                    <small class="text-muted">${book.category}</small>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    
+    resultsDiv.innerHTML = html;
+}
+
+function selectBook(bookId, title, author, isbn) {
+    document.getElementById('selected_book_id').value = bookId;
+    document.getElementById('book_search').value = `${title} by ${author}`;
+    
+    // Show selected book info
+    const selectedInfo = document.getElementById('selected_book_info');
+    selectedInfo.innerHTML = `
+        <div class="alert alert-success">
+            <strong>Selected:</strong> ${title}<br>
+            <small>Author: ${author} • ISBN: ${isbn}</small>
+        </div>
+    `;
+    selectedInfo.style.display = 'block';
+    
+    // Clear search results
+    document.getElementById('book_search_results').innerHTML = '';
+}
+
+function previewInventory() {
+    const bookId = document.getElementById('selected_book_id').value;
+    const quantity = document.getElementById('quantity').value;
+    const condition = document.getElementById('condition').value;
+    const acquisitionDate = document.getElementById('acquisition_date').value;
+    const costPerUnit = document.getElementById('cost_per_unit').value;
+    const supplier = document.getElementById('supplier').value;
+    const location = document.getElementById('location').value;
+    const notes = document.getElementById('notes').value;
+    const generateIds = document.getElementById('generate_ids').checked;
+
+    if (!bookId || !quantity || !condition) {
+        alert('Please fill in required fields: Book, Quantity, and Condition.');
+        return;
+    }
+
+    const totalCost = costPerUnit ? (parseFloat(costPerUnit) * parseInt(quantity)).toFixed(2) : 'Not specified';
+    
+    const previewHtml = `
+        <div class="row">
+            <div class="col-12">
+                <h6>Inventory Summary:</h6>
+                <table class="table table-sm">
+                    <tr><td><strong>Book:</strong></td><td>${document.getElementById('book_search').value}</td></tr>
+                    <tr><td><strong>Quantity:</strong></td><td>${quantity} copies</td></tr>
+                    <tr><td><strong>Condition:</strong></td><td>${condition.charAt(0).toUpperCase() + condition.slice(1)}</td></tr>
+                    <tr><td><strong>Acquisition Date:</strong></td><td>${acquisitionDate || 'Not specified'}</td></tr>
+                    <tr><td><strong>Cost per Unit:</strong></td><td>$${costPerUnit || '0.00'}</td></tr>
+                    <tr><td><strong>Total Cost:</strong></td><td>$${totalCost}</td></tr>
+                    <tr><td><strong>Supplier:</strong></td><td>${supplier || 'Not specified'}</td></tr>
+                    <tr><td><strong>Location:</strong></td><td>${location || 'Not specified'}</td></tr>
+                    <tr><td><strong>Generate IDs:</strong></td><td>${generateIds ? 'Yes' : 'No'}</td></tr>
+                </table>
+                ${notes ? `<p><strong>Notes:</strong> ${notes}</p>` : ''}
+            </div>
+        </div>
+    `;
+
+    document.getElementById('previewContent').innerHTML = previewHtml;
+    new bootstrap.Modal(document.getElementById('previewModal')).show();
+}
+
+function submitForm() {
+    document.getElementById('addInventoryForm').submit();
+}
+
+// Auto-search functionality
+document.getElementById('book_search').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    const query = this.value.trim();
+    
+    if (query.length >= 2) {
+        searchTimeout = setTimeout(() => {
+            searchBooks();
+        }, 500);
+    } else if (query.length === 0) {
+        document.getElementById('book_search_results').innerHTML = '';
+        document.getElementById('selected_book_info').style.display = 'none';
+        document.getElementById('selected_book_id').value = '';
+    }
+});
+
+// Calculate total cost when cost or quantity changes
+document.getElementById('cost_per_unit').addEventListener('input', updateTotalCost);
+document.getElementById('quantity').addEventListener('input', updateTotalCost);
+
+function updateTotalCost() {
+    const cost = parseFloat(document.getElementById('cost_per_unit').value) || 0;
+    const quantity = parseInt(document.getElementById('quantity').value) || 0;
+    const total = (cost * quantity).toFixed(2);
+    
+    // You can display this somewhere if needed
+    console.log(`Total cost: $${total}`);
+}
+
+// Form validation
+document.getElementById('addInventoryForm').addEventListener('submit', function(e) {
+    const bookId = document.getElementById('selected_book_id').value;
+    const quantity = document.getElementById('quantity').value;
+    const condition = document.getElementById('condition').value;
+    
+    if (!bookId) {
+        e.preventDefault();
+        alert('Please select a book first.');
+        return false;
+    }
+    
+    if (!quantity || quantity < 1) {
+        e.preventDefault();
+        alert('Please enter a valid quantity (minimum 1).');
+        return false;
+    }
+    
+    if (!condition) {
+        e.preventDefault();
+        alert('Please select the book condition.');
+        return false;
+    }
+});
+</script>
+{% endblock %}

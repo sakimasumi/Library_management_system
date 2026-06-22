@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Maintenance - {{ maintenance.room.room_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'room_management:manage_maintenance' %}">Maintenance</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'room_management:view_maintenance' maintenance.maintenance_id %}">View Details</a></li>
+                            <li class="breadcrumb-item active">Edit</li>
+                        </ol>
+                    </nav>
+                    <h1>
+                        <i class="bi bi-pencil me-2 text-warning"></i>
+                        Edit Maintenance
+                    </h1>
+                    <p class="text-muted">Maintenance ID: #{{ maintenance.maintenance_id|stringformat:"05d" }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'room_management:view_maintenance' maintenance.maintenance_id %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Cancel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Form -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-form-text me-2"></i>
+                        Maintenance Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Room (Read-only) -->
+                        <div class="mb-3">
+                            <label class="form-label">Room</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-building"></i></span>
+                                <input type="text" class="form-control" value="{{ maintenance.room.room_name }} - {{ maintenance.room.room_number }}" readonly>
+                            </div>
+                            {{ form.room.as_hidden }}
+                        </div>
+
+                        <!-- Maintenance Type -->
+                        <div class="mb-3">
+                            <label for="{{ form.maintenance_type.id_for_label }}" class="form-label">Maintenance Type *</label>
+                            {{ form.maintenance_type }}
+                            {% if form.maintenance_type.errors %}
+                                <div class="text-danger small">{{ form.maintenance_type.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Scheduled Date -->
+                        <div class="mb-3">
+                            <label for="{{ form.scheduled_date.id_for_label }}" class="form-label">Scheduled Date *</label>
+                            {{ form.scheduled_date }}
+                            {% if form.scheduled_date.errors %}
+                                <div class="text-danger small">{{ form.scheduled_date.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Description *</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Performed By -->
+                        <div class="mb-3">
+                            <label for="{{ form.performed_by.id_for_label }}" class="form-label">Performed By</label>
+                            {{ form.performed_by }}
+                            {% if form.performed_by.errors %}
+                                <div class="text-danger small">{{ form.performed_by.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="mb-4">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="text-danger small">{{ form.notes.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'room_management:view_maintenance' maintenance.maintenance_id %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-save me-2"></i>Update Maintenance
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Current Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Current Details
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <td class="text-muted">Status:</td>
+                            <td>
+                                {% if maintenance.is_completed %}
+                                    <span class="badge bg-success">Completed</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Created:</td>
+                            <td>{{ maintenance.created_at|date:"M d, Y" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Created By:</td>
+                            <td>{{ maintenance.created_by.get_full_name|default:maintenance.created_by.username }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Warning Notice -->
+            {% if maintenance.is_completed %}
+            <div class="card border-warning">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle text-warning fs-4 me-3"></i>
+                        <div>
+                            <h6 class="mb-1">Completed Maintenance</h6>
+                            <small class="text-muted">This maintenance has been marked as completed. Changes should be made carefully.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

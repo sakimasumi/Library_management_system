@@ -1,0 +1,523 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="bi bi-speedometer2 me-2"></i>Dashboard</h2>
+                    <p class="text-muted mb-0">Welcome back, {{ member.name }}!</p>
+                </div>
+                <div class="text-end">
+                    <small class="text-muted">Member ID: {{ member.member_id }}</small><br>
+                    <small class="text-muted">{{ "now"|date:"l, F d, Y" }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="mb-1">{{ current_borrowings.count }}</h5>
+                            <p class="mb-0 small">Current Borrowings</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-book fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="mb-1">{{ overdue_count }}</h5>
+                            <p class="mb-0 small">Overdue Books</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-exclamation-triangle fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="mb-1">{{ active_reservations.count }}</h5>
+                            <p class="mb-0 small">Active Reservations</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-bookmark fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="mb-1">${{ member.total_unpaid_fines|floatformat:2 }}</h5>
+                            <p class="mb-0 small">Unpaid Fines</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-currency-dollar fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ NEW: Notifications Section -->
+    {% if recent_notifications %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="bi bi-bell me-2"></i>Recent Notifications
+                        {% if unread_notifications_count %}
+                        <span class="badge bg-danger ms-2">{{ unread_notifications_count }}</span>
+                        {% endif %}
+                    </h6>
+                    <a href="{% url 'student:notifications' %}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-eye me-1"></i>View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% for notification in recent_notifications %}
+                    <div class="d-flex align-items-start mb-3 {% if not notification.is_read %}bg-light p-3 rounded{% else %}p-2{% endif %}">
+                        <div class="me-3">
+                            {% if notification.notification_type == 'book_due' %}
+                                <i class="bi bi-clock text-warning fs-5"></i>
+                            {% elif notification.notification_type == 'book_overdue' %}
+                                <i class="bi bi-exclamation-triangle text-danger fs-5"></i>
+                            {% elif notification.notification_type == 'reservation_ready' %}
+                                <i class="bi bi-check-circle text-success fs-5"></i>
+                            {% elif notification.notification_type == 'fine_imposed' %}
+                                <i class="bi bi-currency-dollar text-danger fs-5"></i>
+                            {% elif notification.notification_type == 'room_booking_approved' %}
+                                <i class="bi bi-door-open text-success fs-5"></i>
+                            {% elif notification.notification_type == 'room_booking_cancelled' %}
+                                <i class="bi bi-door-closed text-warning fs-5"></i>
+                            {% else %}
+                                <i class="bi bi-info-circle text-info fs-5"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">{{ notification.title }}</h6>
+                            <p class="mb-1 text-muted">{{ notification.message|truncatechars:120 }}</p>
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>{{ notification.created_at|timesince }} ago
+                            </small>
+                            {% if not notification.is_read %}
+                            <span class="badge bg-primary ms-2">New</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if not forloop.last %}<hr class="my-2">{% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-lightning me-2"></i>Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'student:browse_books' %}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-search me-2"></i>Browse Books
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'student:view_rooms' %}" class="btn btn-outline-success w-100">
+                                <i class="bi bi-door-open me-2"></i>Book Room
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'student:my_profile' %}" class="btn btn-outline-info w-100">
+                                <i class="bi bi-person me-2"></i>My Profile
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'student:notifications' %}" class="btn btn-outline-warning w-100">
+                                <i class="bi bi-bell me-2"></i>Notifications
+                                {% if unread_notifications_count %}
+                                <span class="badge bg-danger">{{ unread_notifications_count }}</span>
+                                {% endif %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Row -->
+    <div class="row">
+        <!-- Current Borrowings -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-book me-2"></i>Current Borrowings</h6>
+                    <a href="{% url 'student:my_borrowings' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">                    {% if current_borrowings %}                        {% for borrow in current_borrowings|slice:":5" %}
+                        <div class="d-flex align-items-center mb-3 dashboard-item">
+                            <!-- Book Cover -->
+                            <div class="me-3">
+                                {% if borrow.book.image %}
+                                    <img src="{{ borrow.book.image.url }}" alt="{{ borrow.book.title_of_book }}" 
+                                         class="dashboard-book-cover">
+                                {% else %}
+                                    <div class="dashboard-placeholder d-flex align-items-center justify-content-center">
+                                        <i class="bi bi-book text-muted"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ borrow.book.title_of_book|truncatechars:40 }}</h6>
+                                <small class="text-muted">{{ borrow.book.author.name }}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge {% if borrow.is_overdue %}bg-danger{% elif borrow.date_due <= three_days_from_now %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                                    {% if borrow.is_overdue %}
+                                        {{ borrow.days_overdue }} days overdue
+                                    {% else %}
+                                        Due {{ borrow.date_due|date:"M d" }}
+                                    {% endif %}
+                                </span>
+                                {% if borrow.can_renew %}
+                                <form method="POST" action="{% url 'student:renew_book' borrow.borrow_id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-primary ms-1">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if not forloop.last %}<hr class="my-2">{% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-book display-6 text-muted"></i>
+                            <p class="text-muted mt-2">No books currently borrowed</p>
+                            <a href="{% url 'student:browse_books' %}" class="btn btn-primary">Browse Books</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Reservations -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-bookmark me-2"></i>Active Reservations</h6>
+                    <a href="{% url 'student:my_reservations' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">                    {% if active_reservations %}                        {% for reservation in active_reservations|slice:":5" %}
+                        <div class="d-flex align-items-center mb-3 dashboard-item">
+                            <!-- Book Cover -->
+                            <div class="me-3">
+                                {% if reservation.book.image %}
+                                    <img src="{{ reservation.book.image.url }}" alt="{{ reservation.book.title_of_book }}" 
+                                         class="dashboard-book-cover">
+                                {% else %}
+                                    <div class="dashboard-placeholder d-flex align-items-center justify-content-center">
+                                        <i class="bi bi-book text-muted"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ reservation.book.title_of_book|truncatechars:40 }}</h6>
+                                <small class="text-muted">Reserved {{ reservation.date_reserved|date:"M d, Y" }}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge {% if reservation.is_expired %}bg-danger{% else %}bg-info{% endif %}">
+                                    {% if reservation.is_expired %}
+                                        Expired
+                                    {% else %}
+                                        Expires {{ reservation.date_expires|date:"M d" }}
+                                    {% endif %}
+                                </span>
+                                {% if reservation.status == 'active' %}
+                                <form method="POST" action="{% url 'student:cancel_reservation' reservation.reservation_id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger ms-1">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if not forloop.last %}<hr class="my-2">{% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-bookmark display-6 text-muted"></i>
+                            <p class="text-muted mt-2">No active reservations</p>
+                            <a href="{% url 'student:browse_books' %}" class="btn btn-primary">Browse Books</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Second Row -->
+    <div class="row">
+        <!-- Upcoming Room Bookings -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-calendar-check me-2"></i>Upcoming Room Bookings</h6>
+                    <a href="{% url 'student:my_room_bookings' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">                    {% if upcoming_bookings %}                        {% for booking in upcoming_bookings %}
+                        <div class="d-flex align-items-center mb-3 dashboard-item">
+                            <!-- Room Cover -->
+                            <div class="me-3">
+                                {% if booking.room.cover_image %}
+                                    <img src="{{ booking.room.cover_image.url }}" alt="{{ booking.room.room_name }}" 
+                                         class="dashboard-room-cover">
+                                {% else %}
+                                    <div class="dashboard-room-placeholder d-flex align-items-center justify-content-center">
+                                        <i class="bi bi-door-open text-muted"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ booking.room.room_name }}</h6>
+                                <small class="text-muted">{{ booking.booking_date|date:"M d, Y" }} • {{ booking.start_time|time:"H:i" }}-{{ booking.end_time|time:"H:i" }}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge {% if booking.status == 'confirmed' %}bg-success{% elif booking.status == 'pending' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                    {{ booking.get_status_display }}
+                                </span>
+                            </div>
+                        </div>
+                        {% if not forloop.last %}<hr class="my-2">{% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-calendar-x display-6 text-muted"></i>
+                            <p class="text-muted mt-2">No upcoming room bookings</p>
+                            <a href="{% url 'student:view_rooms' %}" class="btn btn-primary">Book a Room</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>        </div>
+
+        <!-- Queue Status -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-list-ul me-2"></i>Room Booking Queue</h6>
+                    <a href="{% url 'student:my_queue_status' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">                    {% if waiting_queue_entries %}                        {% for queue_entry in waiting_queue_entries %}
+                        <div class="d-flex align-items-center mb-3 dashboard-item">
+                            <!-- Room Cover -->
+                            <div class="me-3">
+                                {% if queue_entry.room.cover_image %}
+                                    <img src="{{ queue_entry.room.cover_image.url }}" alt="{{ queue_entry.room.room_name }}" 
+                                         class="dashboard-room-cover">
+                                {% else %}
+                                    <div class="dashboard-room-placeholder d-flex align-items-center justify-content-center">
+                                        <i class="bi bi-door-open text-muted"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ queue_entry.room.room_name }}</h6>
+                                <small class="text-muted">
+                                    {{ queue_entry.preferred_date|date:"M d, Y" }} • 
+                                    {{ queue_entry.preferred_start_time|time:"H:i" }} • 
+                                    Position {{ queue_entry.queue_position }}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge {% if queue_entry.status == 'waiting' %}bg-warning text-dark{% elif queue_entry.status == 'notified' %}bg-info{% else %}bg-secondary{% endif %}">
+                                    {% if queue_entry.status == 'waiting' %}
+                                        #{{ queue_entry.queue_position }}
+                                    {% else %}
+                                        {{ queue_entry.status|title }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        {% if not forloop.last %}<hr class="my-2">{% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-clock display-6 text-muted"></i>
+                            <p class="text-muted mt-2">No active queue entries</p>
+                            <small class="text-muted">Join a queue when your preferred room is unavailable</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Unpaid Fines -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-currency-dollar me-2"></i>Unpaid Fines</h6>
+                    <a href="{% url 'student:my_fines' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if unpaid_fines %}
+                        {% for fine in unpaid_fines|slice:":5" %}
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">${{ fine.amount }}</h6>
+                                <small class="text-muted">{{ fine.get_fine_type_display }} • {{ fine.date_imposed|date:"M d, Y" }}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-danger">Unpaid</span>
+                            </div>
+                        </div>
+                        {% if not forloop.last %}<hr class="my-2">{% endif %}
+                        {% endfor %}
+                        
+                        {% if unpaid_fines.count > 5 %}
+                        <div class="text-center mt-3">
+                            <small class="text-muted">And {{ unpaid_fines.count|add:"-5" }} more...</small>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="text-center mt-3">
+                            <div class="alert alert-warning">
+                                <strong>Total Unpaid: ${{ member.total_unpaid_fines|floatformat:2 }}</strong>
+                                <br><small>Please pay fines to continue borrowing books</small>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-check-circle display-6 text-success"></i>
+                            <p class="text-muted mt-2">No unpaid fines</p>
+                            <p class="text-success">Your account is in good standing!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh stats every 5 minutes
+    setInterval(function() {
+        // You can add AJAX calls here to refresh stats without page reload
+    }, 300000);
+
+    // Add tooltips to badges
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Confirmation for renewal and cancellation forms
+    document.querySelectorAll('form[action*="renew"]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            if (!confirm('Are you sure you want to renew this book?')) {
+                e.preventDefault();
+            }
+        });
+    });
+
+    document.querySelectorAll('form[action*="cancel"]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            if (!confirm('Are you sure you want to cancel this reservation?')) {
+                e.preventDefault();
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.dashboard-card-img {
+    height: 200px;
+    object-fit: cover;
+}
+
+/* Dashboard image styles for consistent display */
+.dashboard-book-cover {
+    width: 50px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.dashboard-room-cover {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.dashboard-placeholder {
+    width: 50px;
+    height: 70px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+
+.dashboard-room-placeholder {
+    width: 50px;
+    height: 50px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+
+/* Hover effects for dashboard items */
+.dashboard-item {
+    transition: transform 0.2s ease-in-out;
+}
+
+.dashboard-item:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}

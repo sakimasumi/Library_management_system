@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ publisher.name }} - Publisher Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-building me-2 text-primary"></i>
+                    {{ publisher.name }}
+                </h1>
+                <div>
+                    <a href="{% url 'core:manage_publishers' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Publishers
+                    </a>
+                    <a href="{% url 'core:update_publisher' publisher.id %}" class="btn btn-warning">
+                        <i class="bi bi-pencil me-2"></i>Edit Publisher
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Publisher Information -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Contact Information</h5>
+                </div>
+                <div class="card-body">
+                    {% if publisher.address %}
+                        <p><strong>Address:</strong><br>{{ publisher.address|linebreaks }}</p>
+                    {% endif %}
+                    {% if publisher.email %}
+                        <p><strong>Email:</strong><br>
+                            <a href="mailto:{{ publisher.email }}">{{ publisher.email }}</a>
+                        </p>
+                    {% endif %}
+                    {% if publisher.phone %}
+                        <p><strong>Phone:</strong><br>{{ publisher.phone }}</p>
+                    {% endif %}
+                    {% if publisher.website %}
+                        <p><strong>Website:</strong><br>
+                            <a href="{{ publisher.website }}" target="_blank">{{ publisher.website }}</a>
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <!-- Books by Publisher -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Books Published ({{ books.count }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if books %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Author</th>
+                                        <th>Category</th>
+                                        <th>Year</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for book in books %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'core:book_detail' book.book_id %}">
+                                                {{ book.title_of_book|truncatechars:40 }}
+                                            </a>
+                                        </td>
+                                        <td>{{ book.author.name }}</td>
+                                        <td><span class="badge bg-secondary">{{ book.category.name }}</span></td>
+                                        <td>{{ book.publication_date.year|default:"Unknown" }}</td>
+                                        <td>
+                                            {% if book.is_available %}
+                                                <span class="badge bg-success">Available</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Borrowed</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No books found for this publisher.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

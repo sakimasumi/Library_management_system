@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Reserve Book - {{ book.title_of_book }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'student:student_dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'student:browse_books' %}">Browse Books</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'student:book_detail' book.book_id %}">{{ book.title_of_book|truncatechars:30 }}</a></li>
+                    <li class="breadcrumb-item active">Reserve Book</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="mb-0">
+                        <i class="bi bi-bookmark me-2"></i>Confirm Book Reservation
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">                            {% if book.image %}
+                                <img src="{{ book.image.url }}" class="img-fluid rounded" alt="{{ book.title_of_book }}">
+                            {% else %}
+                                <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 200px;">
+                                    <i class="bi bi-book display-4 text-muted"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <h4>{{ book.title_of_book }}</h4>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Author:</strong></td>
+                                    <td>{{ book.author.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Category:</strong></td>
+                                    <td>{{ book.category.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>ISBN:</strong></td>
+                                    <td>{{ book.book_id_isbn }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Current Status:</strong></td>
+                                    <td><span class="badge bg-danger">Currently Borrowed</span></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <h5 class="text-warning">Reservation Information</h5>
+                            <div class="alert alert-warning">
+                                <ul class="mb-0">
+                                    <li><strong>Reservation Date:</strong> {{ today|date:"F d, Y" }}</li>
+                                    <li><strong>Expires On:</strong> {{ expiry_date|date:"F d, Y" }} (7 days from today)</li>
+                                    <li><strong>Priority:</strong> You'll be notified when the book becomes available</li>
+                                    <li><strong>Hold Period:</strong> 3 days to collect once notified</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <h5>Your Current Status</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Active Reservations:</strong> {{ member.active_reservations_count }} / {{ member.max_reservations_allowed }}</p>
+                                    <p><strong>Books Currently Borrowed:</strong> {{ member.current_borrowings_count }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Unpaid Fines:</strong> ${{ member.total_unpaid_fines|floatformat:2 }}</p>
+                                    <p><strong>Total Reservations Made:</strong> {{ member.total_reservations_made }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row">
+                        <div class="col-12 text-center">
+                            <form method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-warning btn-lg me-3">
+                                    <i class="bi bi-bookmark me-2"></i>Confirm Reservation
+                                </button>
+                                <a href="{% url 'student:book_detail' book.book_id %}" class="btn btn-secondary btn-lg">
+                                    <i class="bi bi-arrow-left me-2"></i>Cancel
+                                </a>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

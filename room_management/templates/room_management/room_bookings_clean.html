@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Room Bookings - Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-calendar-check me-2 text-primary"></i>
+                    Room Bookings
+                </h1>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'room_management:book_room' %}" class="btn btn-success">
+                        <i class="bi bi-plus-circle me-2"></i>New Booking
+                    </a>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-calendar me-2"></i>View
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="switchView('today')">
+                                <i class="bi bi-calendar-day me-2"></i>Today
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="switchView('week')">
+                                <i class="bi bi-calendar-week me-2"></i>This Week
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="switchView('month')">
+                                <i class="bi bi-calendar-month me-2"></i>This Month
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" id="filterForm">
+                        <div class="row align-items-end">
+                            <div class="col-md-3">
+                                <label for="search" class="form-label">Search Bookings</label>
+                                <input type="text" class="form-control" id="search" name="q" 
+                                       value="{{ request.GET.q }}" placeholder="Room name, user...">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="status" class="form-label">Status</label>
+                                <select class="form-select" id="status" name="status">
+                                    <option value="">All Status</option>
+                                    {% for status in status_choices %}
+                                        <option value="{{ status.0 }}" {% if request.GET.status == status.0 %}selected{% endif %}>
+                                            {{ status.1 }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="date" class="form-label">Date</label>
+                                <input type="date" class="form-control" id="date" name="date" 
+                                       value="{{ request.GET.date }}">
+                            </div>
+                            <div class="col-md-3">
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-search"></i> Search
+                                    </button>
+                                    <a href="{% url 'room_management:room_bookings' %}" class="btn btn-secondary">
+                                        <i class="bi bi-arrow-clockwise"></i> Reset
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Bookings</h5>
+                        <small class="text-muted">{{ page_obj.paginator.count }} bookings found</small>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Booking ID</th>
+                                        <th>Room</th>
+                                        <th>Booked By</th>
+                                        <th>Date & Time</th>
+                                        <th>Duration</th>
+                                        <th>Purpose</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for booking in page_obj %}
+                                        <tr>
+                                            <td>
+                                                <span class="font-monospace">#{{ booking.booking_id|stringformat:"05d" }}</span>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <div class="fw-medium">{{ booking.room.room_name }}</div>
+                                                    <small class="text-muted">{{ booking.room.room_number }}</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <div class="fw-medium">{{ booking.booked_by.get_full_name|default:booking.booked_by.username }}</div>
+                                                    <small class="text-muted">{{ booking.booked_by.email }}</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <div class="fw-medium">{{ booking.booking_date|date:"M d, Y" }}</div>
+                                                    <small class="text-muted">
+                                                        {{ booking.start_time|time:"g:i A" }} - {{ booking.end_time|time:"g:i A" }}
+                                                    </small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">{{ booking.duration_hours }}h</span>
+                                            </td>
+                                            <td>
+                                                <span class="text-truncate" style="max-width: 150px;" title="{{ booking.purpose }}">
+                                                    {{ booking.purpose|truncatechars:30 }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if booking.status == 'confirmed' %}
+                                                    <span class="badge bg-success">Confirmed</span>
+                                                {% elif booking.status == 'pending' %}
+                                                    <span class="badge bg-warning">Pending</span>
+                                                {% elif booking.status == 'cancelled' %}
+                                                    <span class="badge bg-danger">Cancelled</span>
+                                                {% elif booking.status == 'completed' %}
+                                                    <span class="badge bg-primary">Completed</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ booking.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                                        <i class="bi bi-three-dots"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        {% if booking.status == 'pending' %}
+                                                            <li><a class="dropdown-item text-success" href="{% url 'room_management:approve_booking' booking.booking_id %}">
+                                                                <i class="bi bi-check-circle me-2"></i>Approve
+                                                            </a></li>
+                                                        {% endif %}
+                                                        {% if booking.status in 'pending,confirmed' %}
+                                                            <li><a class="dropdown-item text-danger" href="{% url 'room_management:cancel_booking' booking.booking_id %}">
+                                                                <i class="bi bi-x-circle me-2"></i>Cancel
+                                                            </a></li>
+                                                        {% endif %}
+                                                        <li><a class="dropdown-item" href="{% url 'room_management:booking_detail' booking.booking_id %}">
+                                                            <i class="bi bi-eye me-2"></i>View Details
+                                                        </a></li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Booking pagination" class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">First</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Previous</a>
+                                        </li>
+                                    {% endif %}
+
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ num }}</span>
+                                            </li>
+                                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ num }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">{{ num }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Next</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Last</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-calendar-x fs-1 text-muted"></i>
+                            <h5 class="text-muted mt-3">No Bookings Found</h5>
+                            <p class="text-muted">No bookings match your current filters.</p>
+                            <a href="{% url 'room_management:book_room' %}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-2"></i>Create First Booking
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function switchView(view) {
+    var url = new URL(window.location);
+    url.searchParams.set('view', view);
+    window.location.href = url.toString();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}Member Status Debug{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2>Member Status Debug - {{ member.name }}</h2>
+            <div class="alert alert-warning">
+                <strong>Debug Information</strong> - Remove this page in production!
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Basic Information</h4>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <td><strong>Member ID:</strong></td>
+                            <td>{{ status_info.member_id }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Name:</strong></td>
+                            <td>{{ status_info.member_name }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Current Borrowings:</strong></td>
+                            <td>{{ status_info.current_borrowings_count }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Max Books Allowed:</strong></td>
+                            <td>{{ status_info.max_books }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Can Borrow More:</strong></td>
+                            <td>
+                                {% if status_info.can_borrow_more %}
+                                    <span class="badge badge-success">YES</span>
+                                {% else %}
+                                    <span class="badge badge-danger">NO</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total Unpaid Fines:</strong></td>
+                            <td>${{ status_info.total_unpaid_fines|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Current Reservations:</strong></td>
+                            <td>{{ status_info.current_reservations_count }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Max Reservations:</strong></td>
+                            <td>{{ status_info.max_reservations }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            {% if current_borrowings %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Current Borrowings</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Book</th>
+                                    <th>Date Borrowed</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for borrowing in current_borrowings %}
+                                <tr>
+                                    <td>{{ borrowing.book.title_of_book }}</td>
+                                    <td>{{ borrowing.date_borrow }}</td>
+                                    <td>{{ borrowing.date_due }}</td>
+                                    <td>
+                                        {% if borrowing.is_overdue %}
+                                            <span class="badge badge-danger">Overdue</span>
+                                        {% else %}
+                                            <span class="badge badge-success">Active</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if unpaid_fines %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Unpaid Fines</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date Imposed</th>
+                                    <th>Amount</th>
+                                    <th>Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for fine in unpaid_fines %}
+                                <tr>
+                                    <td>{{ fine.date_imposed }}</td>
+                                    <td>${{ fine.amount|floatformat:2 }}</td>
+                                    <td>{{ fine.reason|default:"No reason provided" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="mt-4">
+                <a href="{% url 'student:student_dashboard' %}" class="btn btn-primary">Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

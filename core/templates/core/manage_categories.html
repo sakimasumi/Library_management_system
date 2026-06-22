@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Categories{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-tags me-2 text-primary"></i>
+                    Manage Categories
+                </h1>
+                <div>
+                    <a href="{% url 'core:add_category' %}" class="btn btn-success">
+                        <i class="bi bi-plus-circle me-2"></i>Add New Category
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Grid -->
+    <div class="row">
+        {% for category in categories %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        {% if category.icon %}
+                            <i class="bi {{ category.icon }} display-6 text-primary me-3"></i>
+                        {% else %}
+                            <i class="bi bi-bookmark display-6 text-secondary me-3"></i>
+                        {% endif %}
+                        <div>
+                            <h5 class="card-title mb-1">{{ category.name }}</h5>
+                            <span class="badge bg-info">{{ category.book_count }} books</span>
+                        </div>
+                    </div>
+                    
+                    {% if category.description %}
+                        <p class="card-text text-muted">{{ category.description|truncatewords:20 }}</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <div class="btn-group w-100" role="group">
+                        <a href="{% url 'core:category_detail' category.id %}" 
+                           class="btn btn-outline-primary">
+                            <i class="bi bi-eye"></i> View
+                        </a>
+                        <a href="{% url 'core:update_category' category.id %}" 
+                           class="btn btn-outline-warning">
+                            <i class="bi bi-pencil"></i> Edit
+                        </a>
+                        <a href="{% url 'core:delete_category' category.id %}" 
+                           class="btn btn-outline-danger">
+                            <i class="bi bi-trash"></i> Delete
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="bi bi-tags display-1 text-muted"></i>
+                <h5 class="mt-3">No categories found</h5>
+                <a href="{% url 'core:add_category' %}" class="btn btn-success">
+                    <i class="bi bi-plus-circle me-2"></i>Add First Category
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

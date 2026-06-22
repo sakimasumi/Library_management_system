@@ -1,0 +1,485 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Donation{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-gift me-2 text-success"></i>
+                    Record New Donation
+                </h1>
+                <div>
+                    <a href="{% url 'core:manage_donations' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Donations
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Donation Form -->
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Donation Information</h5>
+                </div>                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                          <!-- Donor Information -->
+                        <h6 class="mb-3">Donor Information</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_donor_name" class="form-label">Donor Name *</label>
+                                    {{ form.donor_name }}
+                                    {% if form.donor_name.errors %}
+                                        <div class="text-danger small">{{ form.donor_name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_donor_email" class="form-label">Donor Email</label>
+                                    {{ form.donor_email }}
+                                    {% if form.donor_email.errors %}
+                                        <div class="text-danger small">{{ form.donor_email.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_donor_phone" class="form-label">Donor Phone</label>
+                                    {{ form.donor_phone }}
+                                    {% if form.donor_phone.errors %}
+                                        <div class="text-danger small">{{ form.donor_phone.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_donate_date" class="form-label">Donation Date *</label>
+                                    {{ form.donate_date }}
+                                    {% if form.donate_date.errors %}
+                                        <div class="text-danger small">{{ form.donate_date.errors.0 }}</div>
+                                    {% endif %}
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        You can also type in DD/MM/YYYY format
+                                    </div>
+                                    <input type="text" 
+                                           id="id_donate_date_text" 
+                                           class="form-control mt-1" 
+                                           placeholder="DD/MM/YYYY" 
+                                           style="display: none;">
+                                    <div class="mt-1">
+                                        <small>
+                                            <a href="#" id="toggleDateInput" class="text-primary">
+                                                <i class="bi bi-keyboard me-1"></i>Type date manually
+                                            </a>
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div><!-- Book Information -->
+                        <hr>
+                        <h6 class="mb-3">Book Information</h6>
+                          <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_book_id_isbn" class="form-label">ISBN *</label>
+                                    {{ form.book_id_isbn }}
+                                    {% if form.book_id_isbn.errors %}
+                                        <div class="text-danger small">{{ form.book_id_isbn.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_title_of_book" class="form-label">Book Title *</label>
+                                    {{ form.title_of_book }}
+                                    {% if form.title_of_book.errors %}
+                                        <div class="text-danger small">{{ form.title_of_book.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Book Cover Upload -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_book_cover" class="form-label">Book Cover</label>
+                                    {{ form.book_cover }}
+                                    {% if form.book_cover.errors %}
+                                        <div class="text-danger small">{{ form.book_cover.errors.0 }}</div>
+                                    {% endif %}
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Upload an image of the book cover (optional). Supported formats: JPG, PNG, GIF. Max size: 5MB.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Cover Preview</label>
+                                    <div class="border rounded p-3 bg-light text-center" id="coverPreview" style="min-height: 150px;">
+                                        <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                                        <p class="text-muted mb-0">No cover selected</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="id_author" class="form-label">Author *</label>
+                                    {{ form.author }}
+                                    {% if form.author.errors %}
+                                        <div class="text-danger small">{{ form.author.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="id_publisher" class="form-label">Publisher *</label>
+                                    {{ form.publisher }}
+                                    {% if form.publisher.errors %}
+                                        <div class="text-danger small">{{ form.publisher.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="id_category" class="form-label">Category *</label>
+                                    {{ form.category }}
+                                    {% if form.category.errors %}
+                                        <div class="text-danger small">{{ form.category.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_quantity" class="form-label">Quantity *</label>
+                                    {{ form.quantity }}
+                                    {% if form.quantity.errors %}
+                                        <div class="text-danger small">{{ form.quantity.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_state_of_book" class="form-label">Book Condition *</label>
+                                    {{ form.state_of_book }}
+                                    {% if form.state_of_book.errors %}
+                                        <div class="text-danger small">{{ form.state_of_book.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Information -->
+                        <hr>
+                        <div class="mb-3">
+                            <label for="id_notes" class="form-label">Notes</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="text-danger small">{{ form.notes.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'core:manage_donations' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-2"></i>Record Donation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-format ISBN input and handle image preview
+document.addEventListener('DOMContentLoaded', function() {
+    const isbnInput = document.getElementById('id_book_id_isbn');
+    const coverInput = document.getElementById('id_book_cover');
+    const coverPreview = document.getElementById('coverPreview');    const dateInput = document.getElementById('id_donate_date');
+    const dateTextInput = document.getElementById('id_donate_date_text');
+    const toggleDateBtn = document.getElementById('toggleDateInput');
+    
+    // Date input toggle functionality
+    if (dateInput && dateTextInput && toggleDateBtn) {
+        let isTextMode = false;
+        
+        toggleDateBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            isTextMode = !isTextMode;
+            
+            if (isTextMode) {
+                // Switch to text input
+                dateInput.style.display = 'none';
+                dateTextInput.style.display = 'block';
+                toggleDateBtn.innerHTML = '<i class="bi bi-calendar-date me-1"></i>Use date picker';
+                
+                // Convert current date value to DD/MM/YYYY format
+                if (dateInput.value) {
+                    const dateValue = new Date(dateInput.value);
+                    const formattedDate = String(dateValue.getDate()).padStart(2, '0') + '/' + 
+                                        String(dateValue.getMonth() + 1).padStart(2, '0') + '/' + 
+                                        dateValue.getFullYear();
+                    dateTextInput.value = formattedDate;
+                }
+                dateTextInput.focus();
+            } else {
+                // Switch to date picker
+                dateTextInput.style.display = 'none';
+                dateInput.style.display = 'block';
+                toggleDateBtn.innerHTML = '<i class="bi bi-keyboard me-1"></i>Type date manually';
+                
+                // Convert text input to date format
+                if (dateTextInput.value) {
+                    const dateValue = parseDate(dateTextInput.value);
+                    if (dateValue) {
+                        dateInput.value = dateValue.toISOString().split('T')[0];
+                    }
+                }
+                dateInput.focus();
+            }
+        });
+        
+        // Format text input as user types
+        dateTextInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+            
+            if (value.length >= 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2);
+            }
+            if (value.length >= 5) {
+                value = value.substring(0, 5) + '/' + value.substring(5, 9);
+            }
+            
+            e.target.value = value;
+        });
+        
+        // Validate and sync text input with date input
+        dateTextInput.addEventListener('blur', function(e) {
+            const dateValue = parseDate(e.target.value);
+            if (dateValue) {
+                dateInput.value = dateValue.toISOString().split('T')[0];
+                // Remove any previous error styling
+                e.target.classList.remove('is-invalid');
+            } else if (e.target.value) {
+                // Show error for invalid date
+                e.target.classList.add('is-invalid');
+            }
+        });
+        
+        // Sync date picker with text input
+        dateInput.addEventListener('change', function(e) {
+            if (e.target.value && isTextMode) {
+                const dateValue = new Date(e.target.value);
+                const formattedDate = String(dateValue.getDate()).padStart(2, '0') + '/' + 
+                                    String(dateValue.getMonth() + 1).padStart(2, '0') + '/' + 
+                                    dateValue.getFullYear();
+                dateTextInput.value = formattedDate;
+            }
+        });
+    }
+    
+    // Function to parse DD/MM/YYYY format
+    function parseDate(dateString) {
+        if (!dateString) return null;
+        
+        const parts = dateString.split('/');
+        if (parts.length !== 3) return null;
+        
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10);
+        const year = parseInt(parts[2], 10);
+        
+        // Basic validation
+        if (day < 1 || day > 31 || month < 1 || month > 12 || year < 1900 || year > new Date().getFullYear()) {
+            return null;
+        }
+        
+        const date = new Date(year, month - 1, day);
+        
+        // Check if the date is valid (handles things like Feb 30)
+        if (date.getDate() !== day || date.getMonth() !== month - 1 || date.getFullYear() !== year) {
+            return null;
+        }
+        
+        // Check if date is not in the future
+        if (date > new Date()) {
+            return null;
+        }
+        
+        return date;
+    }
+    
+    // Before form submission, ensure the hidden date input has the correct value
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (isTextMode && dateTextInput.value) {
+                const dateValue = parseDate(dateTextInput.value);
+                if (dateValue) {
+                    dateInput.value = dateValue.toISOString().split('T')[0];
+                } else {
+                    e.preventDefault();
+                    alert('Please enter a valid date in DD/MM/YYYY format');
+                    return false;
+                }
+            }
+        });
+    }
+      // ISBN formatting
+    if (isbnInput) {
+        isbnInput.addEventListener('input', function(e) {
+            // Remove any non-digit characters
+            let value = e.target.value.replace(/\D/g, '');
+            
+            // Limit to 20 digits
+            if (value.length > 20) {
+                value = value.substring(0, 20);
+            }
+            
+            e.target.value = value;
+        });
+          isbnInput.addEventListener('blur', function(e) {
+            const value = e.target.value;
+            if (value.length !== 10 && value.length !== 13 && value.length !== 20) {
+                // Show validation message
+                const feedback = e.target.parentNode.querySelector('.isbn-feedback');
+                if (!feedback) {
+                    const feedbackDiv = document.createElement('div');
+                    feedbackDiv.className = 'text-warning small isbn-feedback';
+                    feedbackDiv.textContent = 'ISBN should be 10, 13, or 20 digits long';
+                    e.target.parentNode.appendChild(feedbackDiv);
+                }
+            } else {
+                // Remove validation message if exists
+                const feedback = e.target.parentNode.querySelector('.isbn-feedback');
+                if (feedback) {
+                    feedback.remove();
+                }
+            }
+        });
+    }
+    
+    // Image preview functionality
+    if (coverInput && coverPreview) {
+        coverInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            
+            if (file) {
+                // Validate file type
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                if (!validTypes.includes(file.type)) {
+                    alert('Please select a valid image file (JPG, PNG, or GIF)');
+                    e.target.value = '';
+                    resetPreview();
+                    return;
+                }
+                
+                // Validate file size (5MB limit)
+                const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+                if (file.size > maxSize) {
+                    alert('File size must be less than 5MB');
+                    e.target.value = '';
+                    resetPreview();
+                    return;
+                }
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    coverPreview.innerHTML = `
+                        <img src="${e.target.result}" 
+                             alt="Book Cover Preview" 
+                             class="img-fluid rounded"
+                             style="max-height: 150px; max-width: 100%;">
+                        <p class="text-success mb-0 mt-2">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Cover selected: ${file.name}
+                        </p>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                resetPreview();
+            }
+        });
+    }
+    
+    function resetPreview() {
+        if (coverPreview) {
+            coverPreview.innerHTML = `
+                <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mb-0">No cover selected</p>
+            `;
+        }
+    }
+    
+    // Set default values
+    const quantityInput = document.getElementById('id_quantity');
+    if (quantityInput && !quantityInput.value) {
+        quantityInput.value = 1;
+    }
+    
+    // Add drag and drop functionality for cover upload
+    if (coverPreview && coverInput) {
+        coverPreview.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.add('border-primary');
+        });
+        
+        coverPreview.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.remove('border-primary');
+        });
+        
+        coverPreview.addEventListener('drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.remove('border-primary');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                coverInput.files = files;
+                // Trigger change event
+                const event = new Event('change', { bubbles: true });
+                coverInput.dispatchEvent(event);
+            }
+        });
+        
+        // Make preview area clickable to open file dialog
+        coverPreview.addEventListener('click', function() {
+            coverInput.click();
+        });
+        
+        coverPreview.style.cursor = 'pointer';
+    }
+});
+</script>
+{% endblock %}

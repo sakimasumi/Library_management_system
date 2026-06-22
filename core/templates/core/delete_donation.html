@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Donation{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-trash me-2 text-danger"></i>
+                    Delete Donation Record
+                </h1>
+                <div>
+                    <a href="{% url 'core:manage_donations' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Donations
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Confirm Deletion
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> You are about to delete this donation record. This action cannot be undone.
+                    </div>
+
+                    <!-- Donation Details -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">Donation Details</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Book Title:</strong> {{ donation.title_of_book }}</p>
+                                    <p><strong>ISBN:</strong> {{ donation.book_id_isbn }}</p>
+                                    <p><strong>Author:</strong> {{ donation.author.name }}</p>
+                                    <p><strong>Publisher:</strong> {{ donation.publisher.name }}</p>
+                                    <p><strong>Category:</strong> {{ donation.category.name }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Donor Name:</strong> {{ donation.donor_name }}</p>
+                                    {% if donation.donor_email %}
+                                        <p><strong>Donor Email:</strong> {{ donation.donor_email }}</p>
+                                    {% endif %}
+                                    <p><strong>Quantity:</strong> {{ donation.quantity }}</p>
+                                    <p><strong>Condition:</strong> {{ donation.get_state_of_book_display }}</p>
+                                    <p><strong>Donation Date:</strong> {{ donation.donate_date|date:"M d, Y" }}</p>
+                                </div>
+                            </div>
+                            {% if donation.book_cover %}
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <p><strong>Book Cover:</strong></p>
+                                        <img src="{{ donation.book_cover.url }}" alt="Book cover" 
+                                             class="img-thumbnail" style="max-width: 150px; max-height: 200px;">
+                                    </div>
+                                </div>
+                            {% endif %}
+                            {% if donation.notes %}
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <p><strong>Notes:</strong></p>
+                                        <p class="text-muted">{{ donation.notes }}</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Impact Warning -->
+                    {% if linked_books %}
+                        <div class="alert alert-warning" role="alert">
+                            <i class="bi bi-exclamation-circle me-2"></i>
+                            <strong>Impact on Book Inventory:</strong>
+                            <p class="mb-2">This donation is linked to the following book(s) in your inventory:</p>
+                            <ul class="mb-2">
+                                {% for book in linked_books %}
+                                    <li>
+                                        <strong>{{ book.title_of_book }}</strong> 
+                                        ({{ book.inventory.total_copies }} copies in inventory)
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                            <p class="mb-0">
+                                <strong>What will happen:</strong>
+                                {% for book in linked_books %}
+                                    {% if book.inventory.total_copies <= donation.quantity %}
+                                        The book "{{ book.title_of_book }}" will be completely removed from inventory.
+                                    {% else %}
+                                        {{ donation.quantity }} copies of "{{ book.title_of_book }}" will be removed from inventory.
+                                    {% endif %}
+                                {% endfor %}
+                            </p>
+                        </div>
+                    {% endif %}
+
+                    <!-- Confirmation Form -->
+                    <form method="post" id="deleteDonationForm">
+                        {% csrf_token %}
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="confirmDelete" required>
+                            <label class="form-check-label" for="confirmDelete">
+                                I understand that this action cannot be undone and confirm that I want to delete this donation record.
+                            </label>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'core:manage_donations' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger" id="deleteButton" disabled>
+                                <i class="bi bi-trash me-2"></i>Delete Donation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('confirmDelete').addEventListener('change', function() {
+    document.getElementById('deleteButton').disabled = !this.checked;
+});
+
+document.getElementById('deleteDonationForm').addEventListener('submit', function(e) {
+    if (!document.getElementById('confirmDelete').checked) {
+        e.preventDefault();
+        alert('Please confirm that you want to delete this donation record.');
+    }
+});
+</script>
+{% endblock %}

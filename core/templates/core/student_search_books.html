@@ -1,0 +1,611 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Search Books{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-search me-2 text-primary"></i>
+                    Find Your Next Book
+                </h1>
+                <div>
+                    <a href="{% url 'student:student_dashboard' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                    <a href="{% url 'core:student_book_list' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-list me-2"></i>Browse All Books
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Form -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-funnel me-2"></i>Search Library
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" id="searchForm">
+                        <!-- Main Search -->
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label for="query" class="form-label">What are you looking for?</label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-search"></i>
+                                    </span>
+                                    <input type="text" class="form-control" name="q" id="query" 
+                                           value="{{ query }}" placeholder="Enter book title, author, or keyword...">
+                                    <button type="submit" class="btn btn-primary">
+                                        Search Books
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Quick Filters</label>
+                                <div class="btn-group w-100" role="group">
+                                    <button type="button" class="btn btn-outline-info" onclick="toggleFilters()">
+                                        <i class="bi bi-sliders me-1"></i>Filters
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="clearSearch()">
+                                        <i class="bi bi-x-circle me-1"></i>Clear
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Filters (Hidden by default) -->
+                        <div id="searchFilters" class="mt-4" style="display: none;">
+                            <hr>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="category" class="form-label">Category</label>
+                                    <select class="form-select" name="category" onchange="this.form.submit()">
+                                        <option value="">All Categories</option>
+                                        {% for cat in categories %}
+                                            <option value="{{ cat.id }}" {% if category_filter == cat.id|stringformat:"s" %}selected{% endif %}>
+                                                {{ cat.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <label for="language" class="form-label">Language</label>
+                                    <select class="form-select" name="language" onchange="this.form.submit()">
+                                        <option value="">Any Language</option>
+                                        <option value="English" {% if language_filter == 'English' %}selected{% endif %}>English</option>
+                                        <option value="Spanish" {% if language_filter == 'Spanish' %}selected{% endif %}>Spanish</option>
+                                        <option value="French" {% if language_filter == 'French' %}selected{% endif %}>French</option>
+                                        <option value="German" {% if language_filter == 'German' %}selected{% endif %}>German</option>
+                                        <option value="Other" {% if language_filter == 'Other' %}selected{% endif %}>Other</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <label class="form-label">Availability</label>
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" name="available_only" 
+                                               {% if available_only %}checked{% endif %} onchange="this.form.submit()">
+                                        <label class="form-check-label">
+                                            Show only available books
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Results or Default Content -->
+    {% if query %}
+        <!-- Search Results -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            Search Results for "{{ query }}" 
+                            <span class="badge bg-primary">{{ books.count }} found</span>
+                        </h5>
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-outline-secondary" onclick="setView('grid')" id="gridBtn">
+                                <i class="bi bi-grid-3x3-gap"></i> Grid
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="setView('list')" id="listBtn">
+                                <i class="bi bi-list"></i> List
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% if books %}
+                            <!-- Grid View -->
+                            <div id="gridView" class="row g-4">
+                                {% for book in books %}
+                                <div class="col-lg-3 col-md-4 col-sm-6">
+                                    <div class="card h-100 book-card">
+                                        <div class="card-img-container" style="height: 200px; overflow: hidden; position: relative;">
+                                            {% if book.image %}
+                                                <img src="{{ book.image.url }}" alt="{{ book.title_of_book }}" 
+                                                     class="card-img-top h-100" style="object-fit: cover;">
+                                            {% else %}
+                                                <div class="bg-light d-flex align-items-center justify-content-center h-100">
+                                                    <i class="bi bi-book display-4 text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                            
+                                            <!-- Status Badge -->
+                                            <div class="position-absolute top-0 end-0 m-2">
+                                                {% if book.is_available %}
+                                                    <span class="badge bg-success">Available</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">Borrowed</span>
+                                                {% endif %}
+                                            </div>
+
+                                            <!-- Quick Preview on Hover -->
+                                            <div class="position-absolute top-0 start-0 w-100 h-100 book-overlay d-flex align-items-center justify-content-center" 
+                                                 style="background: rgba(0,0,0,0.7); opacity: 0; transition: opacity 0.3s;">
+                                                <button class="btn btn-light btn-sm" onclick="quickPreview('{{ book.book_id }}')">
+                                                    <i class="bi bi-eye"></i> Quick View
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="card-body d-flex flex-column">
+                                            <h6 class="card-title" title="{{ book.title_of_book }}">
+                                                {{ book.title_of_book|truncatechars:40 }}
+                                            </h6>
+                                            <p class="card-text text-muted small mb-1">
+                                                <i class="bi bi-person me-1"></i>{{ book.author.name }}
+                                            </p>
+                                            <p class="card-text text-muted small mb-2">
+                                                <span class="badge bg-secondary">{{ book.category.name }}</span>
+                                            </p>
+                                            
+                                            <div class="mt-auto">
+                                                <div class="d-grid gap-1">
+                                                    <a href="{% url 'core:student_book_detail' book.book_id %}" 
+                                                       class="btn btn-primary btn-sm">
+                                                        <i class="bi bi-eye me-1"></i>View Details
+                                                    </a>
+                                                    
+                                                    {% if book.is_available %}
+                                                        <a href="{% url 'student:borrow_book' book.book_id %}" 
+                                                           class="btn btn-success btn-sm">
+                                                            <i class="bi bi-bookmark-plus me-1"></i>Borrow Now
+                                                        </a>
+                                                    {% else %}
+                                                        <a href="{% url 'student:reserve_book' book.book_id %}" 
+                                                           class="btn btn-warning btn-sm">
+                                                            <i class="bi bi-calendar-plus me-1"></i>Reserve
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- List View (Hidden by default) -->
+                            <div id="listView" class="d-none">
+                                <div class="list-group">
+                                    {% for book in books %}
+                                    <div class="list-group-item">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-2">
+                                                {% if book.image %}
+                                                    <img src="{{ book.image.url }}" alt="{{ book.title_of_book }}" 
+                                                         class="img-thumbnail" style="width: 80px; height: 100px; object-fit: cover;">
+                                                {% else %}
+                                                    <div class="bg-light d-flex align-items-center justify-content-center" 
+                                                         style="width: 80px; height: 100px;">
+                                                        <i class="bi bi-book text-muted"></i>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6 class="mb-1">{{ book.title_of_book }}</h6>
+                                                <p class="mb-1">by {{ book.author.name }}</p>
+                                                <small class="text-muted">
+                                                    <span class="badge bg-secondary">{{ book.category.name }}</span>
+                                                    • {{ book.language }}
+                                                    {% if book.publication_date %}
+                                                        • {{ book.publication_date.year }}
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                            <div class="col-md-2 text-center">
+                                                {% if book.is_available %}
+                                                    <span class="badge bg-success fs-6">Available</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning fs-6">Borrowed</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="d-grid gap-1">
+                                                    <a href="{% url 'core:student_book_detail' book.book_id %}" 
+                                                       class="btn btn-outline-primary btn-sm">
+                                                        <i class="bi bi-eye"></i> View
+                                                    </a>
+                                                    {% if book.is_available %}
+                                                        <a href="{% url 'student:borrow_book' book.book_id %}" 
+                                                           class="btn btn-success btn-sm">
+                                                            <i class="bi bi-bookmark-plus"></i> Borrow
+                                                        </a>
+                                                    {% else %}
+                                                        <a href="{% url 'student:reserve_book' book.book_id %}" 
+                                                           class="btn btn-warning btn-sm">
+                                                            <i class="bi bi-calendar-plus"></i> Reserve
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="bi bi-search display-1 text-muted"></i>
+                                <h5 class="mt-3">No books found</h5>
+                                <p class="text-muted">Try different keywords or check your spelling.</p>
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-primary" onclick="clearSearch()">
+                                        <i class="bi bi-arrow-clockwise me-2"></i>Clear Search
+                                    </button>
+                                    <a href="{% url 'core:student_book_list' %}" class="btn btn-outline-primary">
+                                        <i class="bi bi-list me-2"></i>Browse All Books
+                                    </a>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- Default Content: Popular Categories and Recent Books -->
+        <div class="row">
+            <!-- Popular Categories -->
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-tags me-2"></i>Popular Categories
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            {% for category in popular_categories %}
+                            <div class="col-6">
+                                <div class="card category-card" onclick="searchByCategory('{{ category.id }}')">
+                                    <div class="card-body text-center p-3">
+                                        <div class="category-icon mb-2">
+                                            {% if category.name == 'Fiction' %}
+                                                <i class="bi bi-book display-6 text-primary"></i>
+                                            {% elif category.name == 'Science' %}
+                                                <i class="bi bi-flask display-6 text-success"></i>
+                                            {% elif category.name == 'Technology' %}
+                                                <i class="bi bi-cpu display-6 text-info"></i>
+                                            {% elif category.name == 'History' %}
+                                                <i class="bi bi-clock-history display-6 text-warning"></i>
+                                            {% else %}
+                                                <i class="bi bi-bookmark display-6 text-secondary"></i>
+                                            {% endif %}
+                                        </div>
+                                        <h6 class="card-title mb-1">{{ category.name }}</h6>
+                                        <small class="text-muted">{{ category.book_count }} books</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Search Suggestions -->
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-lightbulb me-2"></i>Search Suggestions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <h6>Popular Keywords:</h6>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for keyword in popular_keywords %}
+                                <button type="button" class="btn btn-outline-primary btn-sm" 
+                                        onclick="quickSearch('{{ keyword }}')">
+                                    {{ keyword }}
+                                </button>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <h6>Popular Authors:</h6>
+                            <div class="list-group list-group-flush">
+                                {% for author in popular_authors %}
+                                <a href="#" class="list-group-item list-group-item-action py-2" 
+                                   onclick="quickSearch('{{ author.name }}')">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>{{ author.name }}</span>
+                                        <small class="text-muted">{{ author.book_count }} books</small>
+                                    </div>
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div>
+                            <h6>Search Tips:</h6>
+                            <ul class="list-unstyled small text-muted">
+                                <li><i class="bi bi-check me-1"></i>Use specific keywords for better results</li>
+                                <li><i class="bi bi-check me-1"></i>Search by author name or book title</li>
+                                <li><i class="bi bi-check me-1"></i>Try different spellings if no results</li>
+                                <li><i class="bi bi-check me-1"></i>Use filters to narrow down results</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recently Added Books -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-stars me-2"></i>Recently Added Books
+                        </h5>
+                        <a href="{% url 'core:student_book_list' %}" class="btn btn-outline-primary btn-sm">
+                            View All Books
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            {% for book in recent_books %}
+                            <div class="col-lg-2 col-md-3 col-sm-4 col-6">
+                                <div class="card book-card-small">
+                                    <div style="height: 150px; overflow: hidden;">
+                                        {% if book.image %}
+                                            <img src="{{ book.image.url }}" alt="{{ book.title_of_book }}" 
+                                                 class="card-img-top h-100" style="object-fit: cover;">
+                                        {% else %}
+                                            <div class="bg-light d-flex align-items-center justify-content-center h-100">
+                                                <i class="bi bi-book text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="card-body p-2">
+                                        <h6 class="card-title mb-1" style="font-size: 0.8rem;" title="{{ book.title_of_book }}">
+                                            {{ book.title_of_book|truncatechars:25 }}
+                                        </h6>
+                                        <small class="text-muted d-block">{{ book.author.name }}</small>
+                                        <div class="mt-2">
+                                            <a href="{% url 'core:student_book_detail' book.book_id %}" 
+                                               class="btn btn-primary btn-sm w-100">
+                                                View
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Quick Preview Modal -->
+<div class="modal fade" id="quickPreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quick Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="previewContent">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.book-card {
+    transition: transform 0.2s ease-in-out;
+    border: 1px solid #dee2e6;
+}
+
+.book-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.book-card:hover .book-overlay {
+    opacity: 1 !important;
+}
+
+.category-card {
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+
+.category-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.book-card-small {
+    transition: transform 0.2s ease-in-out;
+}
+
+.book-card-small:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleFilters() {
+    const filtersDiv = document.getElementById('searchFilters');
+    if (filtersDiv.style.display === 'none') {
+        filtersDiv.style.display = 'block';
+    } else {
+        filtersDiv.style.display = 'none';
+    }
+}
+
+function clearSearch() {
+    window.location.href = '{% url "core:student_search_books" %}';
+}
+
+function quickSearch(term) {
+    document.getElementById('query').value = term;
+    document.getElementById('searchForm').submit();
+}
+
+function searchByCategory(categoryId) {
+    const form = document.getElementById('searchForm');
+    const categorySelect = form.querySelector('select[name="category"]');
+    if (categorySelect) {
+        categorySelect.value = categoryId;
+    } else {
+        // Create hidden input if select doesn't exist
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'category';
+        input.value = categoryId;
+        form.appendChild(input);
+    }
+    form.submit();
+}
+
+function setView(viewType) {
+    const gridView = document.getElementById('gridView');
+    const listView = document.getElementById('listView');
+    const gridBtn = document.getElementById('gridBtn');
+    const listBtn = document.getElementById('listBtn');
+    
+    if (viewType === 'grid') {
+        gridView.classList.remove('d-none');
+        listView.classList.add('d-none');
+        gridBtn.classList.add('btn-primary');
+        gridBtn.classList.remove('btn-outline-secondary');
+        listBtn.classList.remove('btn-primary');
+        listBtn.classList.add('btn-outline-secondary');
+    } else {
+        gridView.classList.add('d-none');
+        listView.classList.remove('d-none');
+        listBtn.classList.add('btn-primary');
+        listBtn.classList.remove('btn-outline-secondary');
+        gridBtn.classList.remove('btn-primary');
+        gridBtn.classList.add('btn-outline-secondary');
+    }
+    
+    localStorage.setItem('studentBookView', viewType);
+}
+
+function quickPreview(bookId) {
+    fetch(`/core/ajax/book-preview/${bookId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('previewContent').innerHTML = `
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            ${data.book.image ? 
+                                `<img src="${data.book.image}" class="img-fluid rounded" style="max-height: 200px;">` :
+                                `<div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 200px;">
+                                    <i class="bi bi-book display-4 text-muted"></i>
+                                 </div>`
+                            }
+                        </div>
+                        <div class="col-md-8">
+                            <h5>${data.book.title}</h5>
+                            <p><strong>Author:</strong> ${data.book.author}</p>
+                            <p><strong>Category:</strong> <span class="badge bg-secondary">${data.book.category}</span></p>
+                            <p><strong>Status:</strong> 
+                                ${data.book.is_available ? 
+                                    '<span class="badge bg-success">Available</span>' :
+                                    '<span class="badge bg-warning">Borrowed</span>'
+                                }
+                            </p>
+                            ${data.book.description ? `<p><strong>Description:</strong> ${data.book.description}</p>` : ''}
+                            <div class="mt-3">
+                                <a href="/core/student/books/${bookId}/" class="btn btn-primary">View Full Details</a>
+                                ${data.book.is_available ? 
+                                    `<a href="/student/books/${bookId}/borrow/" class="btn btn-success ms-2">Borrow Now</a>` :
+                                    `<a href="/student/books/${bookId}/reserve/" class="btn btn-warning ms-2">Reserve</a>`
+                                }
+                            </div>
+                        </div>
+                    </div>
+                `;
+                new bootstrap.Modal(document.getElementById('quickPreviewModal')).show();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('previewContent').innerHTML = '<p class="text-danger">Error loading preview.</p>';
+        });
+}
+
+// Load saved view preference
+document.addEventListener('DOMContentLoaded', function() {
+    const savedView = localStorage.getItem('studentBookView') || 'grid';
+    if (document.getElementById('gridView')) {
+        setView(savedView);
+    }
+});
+
+// Auto-search functionality with debounce
+let searchTimeout;
+document.getElementById('query').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    if (this.value.length >= 3) {
+        searchTimeout = setTimeout(() => {
+            // Optional: Show live search suggestions
+            fetchSearchSuggestions(this.value);
+        }, 300);
+    }
+});
+
+function fetchSearchSuggestions(query) {
+    // Optional: Implement live search suggestions
+    // This would show a dropdown with matching book titles/authors
+}
+</script>
+{% endblock %}

@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Logged Out - Library System{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        min-height: 100vh;
+    }
+
+    .logout-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .logout-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        text-align: center;
+        padding: 60px 40px;
+        max-width: 500px;
+        width: 100%;
+    }
+
+    .logout-icon {
+        font-size: 4rem;
+        color: #28a745;
+        margin-bottom: 30px;
+    }
+
+    .btn-login-again {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border: none;
+        border-radius: 10px;
+        padding: 12px 30px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-login-again:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+    }
+
+    .logout-animation {
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="logout-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12">
+                <div class="logout-card logout-animation">
+                    <i class="bi bi-check-circle logout-icon"></i>
+                    
+                    <h2 class="mb-4 text-dark">Successfully Logged Out</h2>
+                    
+                    <p class="lead text-muted mb-4">
+                        Thank you for using the Library Management System.<br>
+                        You have been safely logged out of your account.
+                    </p>
+                    
+                    <div class="mb-4">
+                        <div class="row justify-content-center">
+                            <div class="col-md-8">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <i class="bi bi-shield-check me-2 text-success"></i>
+                                            Security Tips
+                                        </h6>
+                                        <ul class="list-unstyled mb-0 text-start">
+                                            <li class="mb-2">
+                                                <i class="bi bi-check2 me-2 text-success"></i>
+                                                Always log out when using shared computers
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="bi bi-check2 me-2 text-success"></i>
+                                                Clear browser cache for extra security
+                                            </li>
+                                            <li class="mb-0">
+                                                <i class="bi bi-check2 me-2 text-success"></i>
+                                                Keep your password confidential
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="{% url 'login' %}" class="btn btn-login-again btn-success btn-lg me-md-2">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>
+                            Login Again
+                        </a>
+                        <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-house me-2"></i>
+                            Home
+                        </a>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="text-muted">
+                        <small>
+                            <i class="bi bi-clock me-1"></i>
+                            Session ended at {{ "now"|date:"M d, Y g:i A" }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-redirect to login after 30 seconds
+setTimeout(function() {
+    const redirectConfirm = confirm('You will be redirected to the login page. Continue?');
+    if (redirectConfirm) {
+        window.location.href = "{% url 'login' %}";
+    }
+}, 30000);
+
+// Prevent back button after logout
+window.history.pushState(null, "", window.location.href);
+window.onpopstate = function() {
+    window.history.pushState(null, "", window.location.href);
+};
+</script>
+{% endblock %}

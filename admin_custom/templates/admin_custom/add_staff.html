@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Staff Member{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'admin_custom:admin_dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'admin_custom:manage_staff' %}">Manage Staff</a></li>
+                    <li class="breadcrumb-item active">Add Staff Member</li>
+                </ol>
+            </nav>
+        </div>
+    </div>    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-person-plus me-2"></i>Add New Staff Member</h2>
+            <p class="text-muted">Create a new staff member with a new user account</p>
+        </div>
+    </div>
+
+    <!-- Add Staff Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-badge me-2"></i>New Staff Member Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="addStaffForm">
+                        {% csrf_token %}
+                        
+                        <!-- User Account Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="bi bi-person-circle me-2"></i>User Account Details
+                                </h6>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="username" class="form-label">
+                                    <i class="bi bi-at me-1"></i>Username <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                                <div class="form-text">This will be used for login</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">
+                                    <i class="bi bi-envelope me-1"></i>Email Address <span class="text-danger">*</span>
+                                </label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="first_name" class="form-label">
+                                    <i class="bi bi-person me-1"></i>First Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="last_name" class="form-label">
+                                    <i class="bi bi-person me-1"></i>Last Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="password" class="form-label">
+                                    <i class="bi bi-lock me-1"></i>Password <span class="text-danger">*</span>
+                                </label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                                <div class="form-text">Minimum 8 characters</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Staff Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <hr>
+                                <h6 class="text-primary mb-3">
+                                    <i class="bi bi-briefcase me-2"></i>Staff Employment Details
+                                </h6>
+                            </div>                        
+                        <!-- Employee Details -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="employee_id" class="form-label">
+                                    <i class="bi bi-hash me-1"></i>Employee ID <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="employee_id" name="employee_id" 
+                                       placeholder="e.g., EMP001" required>
+                                <div class="form-text">Unique identifier for the employee.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="hire_date" class="form-label">
+                                    <i class="bi bi-calendar me-1"></i>Hire Date <span class="text-danger">*</span>
+                                </label>
+                                <input type="date" class="form-control" id="hire_date" name="hire_date" 
+                                       value="{{ today|date:'Y-m-d' }}" required>
+                            </div>
+                        </div>
+
+                        <!-- Position & Department -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="department" class="form-label">
+                                    <i class="bi bi-building me-1"></i>Department <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="department" name="department" required>
+                                    <option value="">Select department...</option>
+                                    <option value="Library Management">Library Management</option>
+                                    <option value="Information Technology">Information Technology</option>
+                                    <option value="Human Resources">Human Resources</option>
+                                    <option value="Student Services">Student Services</option>
+                                    <option value="Academic Affairs">Academic Affairs</option>
+                                    <option value="Administration">Administration</option>
+                                    <option value="Maintenance">Maintenance</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="position" class="form-label">
+                                    <i class="bi bi-briefcase me-1"></i>Position <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="position" name="position" 
+                                       placeholder="e.g., Senior Librarian" required>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="phone_number" class="form-label">
+                                    <i class="bi bi-telephone me-1"></i>Phone Number
+                                </label>
+                                <input type="tel" class="form-control" id="phone_number" name="phone_number" 
+                                       placeholder="+1 (555) 123-4567">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="emergency_contact" class="form-label">
+                                    <i class="bi bi-person-exclamation me-1"></i>Emergency Contact
+                                </label>
+                                <input type="text" class="form-control" id="emergency_contact" name="emergency_contact" 
+                                       placeholder="Name and phone number">
+                            </div>
+                        </div>
+
+                        <!-- Selected User Preview -->
+                        <div class="row mb-4" id="userPreview" style="display: none;">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <h6 class="alert-heading">
+                                        <i class="bi bi-info-circle me-2"></i>Selected User Preview
+                                    </h6>
+                                    <div id="previewContent"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="row">
+                            <div class="col-12 d-flex justify-content-between">
+                                <a href="{% url 'admin_custom:manage_staff' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left me-2"></i>Back to Staff List
+                                </a>
+                                <div>
+                                    <button type="reset" class="btn btn-outline-warning me-2">
+                                        <i class="bi bi-arrow-clockwise me-2"></i>Reset Form
+                                    </button>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="bi bi-person-plus me-2"></i>Add Staff Member
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const userSelect = document.getElementById('user_id');
+    const userPreview = document.getElementById('userPreview');
+    const previewContent = document.getElementById('previewContent');
+    const employeeIdField = document.getElementById('employee_id');
+    
+    // Generate employee ID based on selection
+    function generateEmployeeId() {
+        const selectedOption = userSelect.options[userSelect.selectedIndex];
+        if (selectedOption.value) {
+            const userName = selectedOption.text.split('(')[0].trim();
+            const initials = userName.split(' ').map(name => name.charAt(0)).join('').toUpperCase();
+            const randomNum = Math.floor(Math.random() * 900) + 100;
+            employeeIdField.value = `EMP${initials}${randomNum}`;
+        }
+    }
+    
+    // Show user preview
+    userSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (selectedOption.value) {
+            const userName = selectedOption.text.split('(')[0].trim();
+            const userEmail = selectedOption.getAttribute('data-email');
+            
+            previewContent.innerHTML = `
+                <strong>Name:</strong> ${userName}<br>
+                <strong>Email:</strong> ${userEmail}<br>
+                <small class="text-muted">This user will be assigned staff privileges.</small>
+            `;
+            userPreview.style.display = 'block';
+            generateEmployeeId();
+        } else {
+            userPreview.style.display = 'none';
+            employeeIdField.value = '';
+        }
+    });
+    
+    // Set default hire date to today
+    document.getElementById('hire_date').valueAsDate = new Date();
+    
+    // Form validation
+    document.getElementById('addStaffForm').addEventListener('submit', function(e) {
+        const requiredFields = this.querySelectorAll('[required]');
+        let isValid = true;
+        
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+        }
+    });
+});
+</script>
+{% endblock %}

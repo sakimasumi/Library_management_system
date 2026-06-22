@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="bi bi-bell-fill me-2 text-primary"></i>
+                    Notifications
+                    {% if unread_count > 0 %}
+                        <span class="badge bg-danger">{{ unread_count }}</span>
+                    {% endif %}
+                </h1>
+                <div>
+                    {% if notifications %}
+                        <form method="post" action="{% url 'student:mark_all_read' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-check-all me-1"></i>Mark All Read
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link {% if filter_type == 'all' or not filter_type %}active{% endif %}" 
+                       href="?filter=all">All Notifications</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if filter_type == 'unread' %}active{% endif %}" 
+                       href="?filter=unread">
+                        Unread
+                        {% if unread_count > 0 %}
+                            <span class="badge bg-danger">{{ unread_count }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if filter_type == 'books' %}active{% endif %}" 
+                       href="?filter=books">Book Related</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if filter_type == 'rooms' %}active{% endif %}" 
+                       href="?filter=rooms">Room Bookings</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if filter_type == 'system' %}active{% endif %}" 
+                       href="?filter=system">System</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="row">
+        <div class="col-12">
+            {% if page_obj %}
+                <div class="list-group">
+                    {% for notification in page_obj %}
+                    <div class="list-group-item {% if not notification.is_read %}list-group-item-warning{% endif %}">
+                        <div class="d-flex w-100 justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-2">
+                                    <!-- Notification Icon -->
+                                    {% if notification.notification_type == 'book_due' %}
+                                        <i class="bi bi-clock text-warning me-2"></i>
+                                    {% elif notification.notification_type == 'book_overdue' %}
+                                        <i class="bi bi-exclamation-triangle text-danger me-2"></i>
+                                    {% elif notification.notification_type == 'book_available' %}
+                                        <i class="bi bi-check-circle text-success me-2"></i>
+                                    {% elif notification.notification_type == 'fine_imposed' %}
+                                        <i class="bi bi-currency-dollar text-danger me-2"></i>
+                                    {% elif notification.notification_type == 'room_confirmed' %}
+                                        <i class="bi bi-door-open text-info me-2"></i>
+                                    {% elif notification.notification_type == 'room_cancelled' %}
+                                        <i class="bi bi-x-circle text-warning me-2"></i>
+                                    {% elif notification.notification_type == 'system' %}
+                                        <i class="bi bi-gear text-secondary me-2"></i>
+                                    {% else %}
+                                        <i class="bi bi-info-circle text-primary me-2"></i>
+                                    {% endif %}
+
+                                    <!-- Priority Badge -->
+                                    {% if notification.priority == 'high' %}
+                                        <span class="badge bg-danger me-2">High Priority</span>
+                                    {% elif notification.priority == 'medium' %}
+                                        <span class="badge bg-warning me-2">Medium</span>
+                                    {% endif %}
+
+                                    <!-- Unread Indicator -->
+                                    {% if not notification.is_read %}
+                                        <span class="badge bg-primary me-2">New</span>
+                                    {% endif %}
+
+                                    <h6 class="mb-0">{{ notification.title }}</h6>
+                                </div>
+
+                                <p class="mb-2">{{ notification.message }}</p>
+
+                                <!-- Action Buttons -->
+                                {% if notification.action_url %}
+                                    <a href="{{ notification.action_url }}" class="btn btn-sm btn-outline-primary me-2">
+                                        <i class="bi bi-arrow-right me-1"></i>{{ notification.action_text|default:"View" }}
+                                    </a>
+                                {% endif %}
+
+                                <!-- Related Information -->
+                                {% if notification.related_book %}
+                                    <div class="mt-2">
+                                        <small class="text-muted">
+                                            <i class="bi bi-book me-1"></i>
+                                            <a href="{% url 'student:book_detail' notification.related_book.book_id %}">
+                                                {{ notification.related_book.title_of_book }}
+                                            </a>
+                                        </small>
+                                    </div>
+                                {% elif notification.related_room %}
+                                    <div class="mt-2">
+                                        <small class="text-muted">
+                                            <i class="bi bi-door-open me-1"></i>
+                                            {{ notification.related_room.room_name }}
+                                        </small>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="text-end">
+                                <small class="text-muted">{{ notification.created_at|timesince }} ago</small>
+                                <br>
+                                <small class="text-muted">{{ notification.created_at|date:"M d, Y H:i" }}</small>
+                                
+                                <div class="mt-2">
+                                    {% if not notification.is_read %}
+                                        <form method="post" action="{% url 'student:mark_notification_read' notification.id %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-success" title="Mark as read">
+                                                <i class="bi bi-check"></i>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                    
+                                    <form method="post" action="{% url 'student:delete_notification' notification.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
+                                                onclick="return confirm('Delete this notification?')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                <nav aria-label="Notifications pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if filter_type %}&filter={{ filter_type }}{% endif %}">First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if filter_type %}&filter={{ filter_type }}{% endif %}">Previous</a>
+                            </li>
+                        {% endif %}
+                        
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                        </li>
+                        
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if filter_type %}&filter={{ filter_type }}{% endif %}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if filter_type %}&filter={{ filter_type }}{% endif %}">Last</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-bell-slash fs-1 text-muted"></i>
+                    <h3 class="mt-3">No notifications</h3>
+                    {% if filter_type == 'unread' %}
+                        <p class="text-muted">You have no unread notifications.</p>
+                    {% elif filter_type != 'all' %}
+                        <p class="text-muted">No {{ filter_type }} notifications found.</p>
+                    {% else %}
+                        <p class="text-muted">You don't have any notifications yet.</p>
+                    {% endif %}
+                    
+                    {% if filter_type != 'all' %}
+                        <a href="{% url 'student:notifications' %}" class="btn btn-primary">
+                            <i class="bi bi-list me-2"></i>View All Notifications
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Notification Settings -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5 class="card-title">Notification Settings</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Email Notifications:</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="emailDueDate" checked>
+                                <label class="form-check-label" for="emailDueDate">Book due date reminders</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="emailOverdue" checked>
+                                <label class="form-check-label" for="emailOverdue">Overdue notifications</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="emailReservation" checked>
+                                <label class="form-check-label" for="emailReservation">Reservation updates</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>System Notifications:</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="systemMaintenance" checked>
+                                <label class="form-check-label" for="systemMaintenance">System maintenance alerts</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="systemEvents" checked>
+                                <label class="form-check-label" for="systemEvents">Library events</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="systemNews">
+                                <label class="form-check-label" for="systemNews">Library news</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-gear me-1"></i>Update Preferences
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
